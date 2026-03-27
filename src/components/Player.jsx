@@ -61,6 +61,31 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
     });
   }, [itemId]);
 
+  // Keep screen awake during playback
+  useEffect(() => {
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch {}
+    }
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLock) wakeLock.release().catch(() => {});
+    };
+  }, []);
+
   useEffect(() => {
     // Try autoplay — if it works, great. If blocked (Safari/iOS), the play overlay stays.
     startPlayback();

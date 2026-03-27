@@ -4,16 +4,44 @@ import { useItemDetail, useEpisodes } from '../hooks/useJellyfin';
 import { getImageUrl } from '../api/jellyfin';
 import Player from '../components/Player';
 import { useApp } from '../context/AppContext';
+import { useSessionTimer } from '../hooks/useSessionTimer';
 import styles from './Detail.module.css';
 
 export default function Detail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { parentSettings } = useApp();
+  const { parentSettings, currentProfile } = useApp();
+  const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
   const { item, loading } = useItemDetail(id);
   const isSeries = item?.Type === 'Series';
   const { episodes, loading: epLoading } = useEpisodes(isSeries ? id : null);
   const [playingId, setPlayingId] = useState(null);
+
+  if (!currentProfile) {
+    navigate('/profiles');
+    return null;
+  }
+
+  if (isLocked) {
+    return (
+      <div className={styles.loading}>
+        <div style={{ fontSize: 96 }}>
+          {lockReason === 'bedtime' ? '🌙' : '⏰'}
+        </div>
+        <h1 style={{ fontSize: 36, fontWeight: 900 }}>
+          {lockReason === 'bedtime' ? 'Time for Bed!' : "Time's Up!"}
+        </h1>
+        <p style={{ fontSize: 20, color: 'var(--text-secondary)' }}>
+          {lockReason === 'bedtime'
+            ? "It's bedtime now. Come back tomorrow!"
+            : "You've used all your screen time for this session."}
+        </p>
+        <button className="btn-primary" onClick={() => navigate('/profiles')}>
+          Back to Profiles
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
