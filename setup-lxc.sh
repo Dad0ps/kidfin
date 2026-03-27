@@ -155,7 +155,7 @@ info "Docker is running"
 
 # --- Clone repo ---
 step "Cloning KidFin repo..."
-pct exec "$CTID" -- git clone https://github.com/Dad0ps/kidfin.git /opt/kidfin || fail "Git clone failed. Is the repo public?"
+pct exec "$CTID" -- git clone https://github.com/0xCoffeeCat/kidfin.git /opt/kidfin || fail "Git clone failed. Is the repo public?"
 info "Repo cloned to /opt/kidfin"
 
 # --- Build and run ---

@@ -40,7 +40,7 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 ### Docker (any Linux host)
 
 ```bash
-git clone https://github.com/Dad0ps/kidfin.git
+git clone https://github.com/0xCoffeeCat/kidfin.git
 cd kidfin
 docker compose up -d --build
 ```
@@ -64,13 +64,13 @@ KIDFIN_PORT=8080
 An interactive setup script is included that creates a dedicated LXC container, installs Docker, and deploys KidFin. Run it on your Proxmox host:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/Dad0ps/kidfin/main/setup-lxc.sh | bash
+curl -sL https://raw.githubusercontent.com/0xCoffeeCat/kidfin/main/setup-lxc.sh | bash
 ```
 
 Or clone first and run locally:
 
 ```bash
-git clone https://github.com/Dad0ps/kidfin.git
+git clone https://github.com/0xCoffeeCat/kidfin.git
 bash kidfin/setup-lxc.sh
 ```
 
@@ -83,7 +83,7 @@ CTID=210 IP=192.168.1.50/24 GATEWAY=192.168.1.1 KIDFIN_PORT=3000 bash setup-lxc.
 ### Bare metal / VM (no Docker)
 
 ```bash
-git clone https://github.com/Dad0ps/kidfin.git
+git clone https://github.com/0xCoffeeCat/kidfin.git
 cd kidfin
 npm install
 npm run build
