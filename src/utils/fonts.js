@@ -16,10 +16,17 @@ export function applyFont(fontId) {
 
 export function applyFontSize(size) {
   const px = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, size || DEFAULT_FONT_SIZE));
-  document.documentElement.style.setProperty('font-size', `${px}px`);
+  const scale = px / DEFAULT_FONT_SIZE;
+  const root = document.getElementById('root');
+  root.style.transformOrigin = 'top left';
+  root.style.transform = `scale(${scale})`;
+  root.style.width = `${100 / scale}%`;
 }
 
 export function clearFont() {
   document.documentElement.style.removeProperty('--font');
-  document.documentElement.style.removeProperty('font-size');
+  const root = document.getElementById('root');
+  root.style.transform = '';
+  root.style.transformOrigin = '';
+  root.style.width = '';
 }
