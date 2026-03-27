@@ -7,14 +7,16 @@ import { applyTheme, getThemeForProfile } from '../utils/themes';
 import { applyFont } from '../utils/fonts';
 import Card from '../components/Card';
 import Player from '../components/Player';
+import PinPad from '../components/PinPad';
 import styles from './Home.module.css';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { currentProfile } = useApp();
+  const { currentProfile, parentPin } = useApp();
   const { items, loading } = useAllItems();
   const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
   const [playingId, setPlayingId] = useState(null);
+  const [showPin, setShowPin] = useState(false);
 
   useEffect(() => {
     if (currentProfile) {
@@ -80,10 +82,29 @@ export default function Home() {
             </span>
           )}
         </div>
-        <button className={styles.backBtn} onClick={() => navigate('/profiles')}>
-          Switch Profile
-        </button>
+        <div className={styles.headerRight}>
+          <button className={styles.editBtn} onClick={() => setShowPin(true)}>
+            Edit Profile
+          </button>
+          <button className={styles.backBtn} onClick={() => navigate('/profiles')}>
+            Switch Profile
+          </button>
+        </div>
       </header>
+
+      {showPin && (
+        <PinPad
+          title="Enter Parent PIN"
+          onSubmit={(entered) => {
+            if (entered === parentPin) {
+              navigate('/parent');
+              return true;
+            }
+            return false;
+          }}
+          onCancel={() => setShowPin(false)}
+        />
+      )}
 
       <main className={styles.grid}>
         {loading
