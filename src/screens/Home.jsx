@@ -31,6 +31,7 @@ export default function Home() {
         itemId={playingId}
         onExit={() => setPlayingId(null)}
         onEnded={() => setPlayingId(null)}
+        userInitiated
       />
     );
   }

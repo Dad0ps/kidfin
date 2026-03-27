@@ -71,6 +71,7 @@ export default function Detail() {
         key={playingId}
         itemId={playingId}
         onExit={() => setPlayingId(null)}
+        userInitiated
         onEnded={handleEnded}
       />
     );

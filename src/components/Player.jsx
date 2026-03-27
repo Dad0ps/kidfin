@@ -8,12 +8,12 @@ function ticksFromSeconds(s) {
   return Math.round(s * 10000000);
 }
 
-export default function Player({ itemId, onExit, onEnded }) {
+export default function Player({ itemId, onExit, onEnded, userInitiated = false }) {
   const videoRef = useRef(null);
   const progressInterval = useRef(null);
   const { parentSettings } = useApp();
   const [playing, setPlaying] = useState(false);
-  const [waiting, setWaiting] = useState(true);
+  const [waiting, setWaiting] = useState(!userInitiated);
   const [volume, setVolume] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
