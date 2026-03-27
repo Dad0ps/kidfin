@@ -115,9 +115,34 @@ export function getImageUrl(itemId, type = 'Primary', params = {}) {
   return `${serverUrl}/Items/${itemId}/Images/${type}?${query}`;
 }
 
+function isSafari() {
+  const ua = navigator.userAgent;
+  return /Safari/.test(ua) && !/Chrome/.test(ua);
+}
+
 export function getStreamUrl(itemId) {
   const serverUrl = getServerUrl().replace(/\/+$/, '');
   const token = getAccessToken();
+  const userId = getAdminUserId();
+
+  if (isSafari()) {
+    // Safari/iOS: use Jellyfin's HLS endpoint
+    const params = new URLSearchParams({
+      api_key: token,
+      DeviceId: 'kidfin-web',
+      MediaSourceId: itemId,
+      VideoCodec: 'h264',
+      AudioCodec: 'aac',
+      MaxStreamingBitrate: '20000000',
+      TranscodingMaxAudioChannels: '2',
+      SegmentContainer: 'ts',
+      MinSegments: '1',
+      BreakOnNonKeyFrames: 'true',
+    });
+    return `${serverUrl}/Videos/${itemId}/master.m3u8?${params}`;
+  }
+
+  // Chrome/Firefox/Edge: use direct stream with transcoding fallback
   const params = new URLSearchParams({
     api_key: token,
     Container: 'mp4,webm',
@@ -128,4 +153,10 @@ export function getStreamUrl(itemId) {
     TranscodingProtocol: 'http',
   });
   return `${serverUrl}/Videos/${itemId}/stream.mp4?${params}`;
+}
+
+export function getDirectStreamUrl(itemId) {
+  const serverUrl = getServerUrl().replace(/\/+$/, '');
+  const token = getAccessToken();
+  return `${serverUrl}/Videos/${itemId}/stream?static=true&api_key=${token}`;
 }

@@ -15,6 +15,39 @@
   background: #000;
 }
 
+.tapToPlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.bigPlay {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--accent-coral);
+  color: white;
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(255, 107, 107, 0.5);
+}
+
+.tapText {
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+}
+
 .error {
   position: absolute;
   inset: 0;
@@ -46,8 +79,15 @@
   transition: opacity 0.3s;
 }
 
-.player:hover .controls {
+.player:hover .controls,
+.player:active .controls {
   opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .controls {
+    opacity: 1;
+  }
 }
 
 .backBtn {

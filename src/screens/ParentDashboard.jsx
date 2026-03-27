@@ -153,7 +153,9 @@ export default function ParentDashboard() {
               </div>
               <div className={styles.profileActions}>
                 <button className={styles.actionBtn} onClick={() => setEditingProfile(p)}>Edit</button>
-                <button className={styles.actionBtn} onClick={() => setShowHistory(p)}>History</button>
+                {parentSettings.showWatchHistory && (
+                  <button className={styles.actionBtn} onClick={() => setShowHistory(p)}>History</button>
+                )}
                 <button
                   className={`${styles.actionBtn} ${styles.deleteBtn}`}
                   onClick={() => handleDeleteProfile(p.id)}
@@ -188,6 +190,14 @@ export default function ParentDashboard() {
               onChange={(e) => updateParentSettings({ ...parentSettings, autoplayNext: e.target.checked })}
             />
             <span className={styles.toggleLabel}>Autoplay next episode</span>
+          </label>
+          <label className={styles.toggle}>
+            <input
+              type="checkbox"
+              checked={parentSettings.showWatchHistory}
+              onChange={(e) => updateParentSettings({ ...parentSettings, showWatchHistory: e.target.checked })}
+            />
+            <span className={styles.toggleLabel}>Show watch history per profile</span>
           </label>
         </div>
       </section>

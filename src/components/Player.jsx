@@ -1,25 +1,19 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { getStreamUrl } from '../api/jellyfin';
+import { getStreamUrl, getDirectStreamUrl } from '../api/jellyfin';
 import { reportPlaybackStart, reportPlaybackProgress, reportPlaybackStopped } from '../api/jellyfin';
 import { useApp } from '../context/AppContext';
-import { getServerUrl, getAccessToken } from '../utils/storage';
 import styles from './Player.module.css';
 
 function ticksFromSeconds(s) {
   return Math.round(s * 10000000);
 }
 
-function getDirectStreamUrl(itemId) {
-  const serverUrl = getServerUrl().replace(/\/+$/, '');
-  const token = getAccessToken();
-  return `${serverUrl}/Videos/${itemId}/stream?static=true&api_key=${token}`;
-}
-
 export default function Player({ itemId, onExit, onEnded }) {
   const videoRef = useRef(null);
   const progressInterval = useRef(null);
   const { parentSettings } = useApp();
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [waiting, setWaiting] = useState(true);
   const [volume, setVolume] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -44,24 +38,45 @@ export default function Player({ itemId, onExit, onEnded }) {
     onExit();
   }, [itemId, onExit, stopReporting]);
 
-  useEffect(() => {
+  const startPlayback = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    video.play().catch(() => {});
-    reportPlaybackStart(itemId).catch(() => {});
+    video.play().then(() => {
+      setPlaying(true);
+      setWaiting(false);
+      reportPlaybackStart(itemId).catch(() => {});
 
-    progressInterval.current = setInterval(() => {
-      if (video && !video.paused) {
-        reportPlaybackProgress(itemId, ticksFromSeconds(video.currentTime)).catch(() => {});
+      if (!progressInterval.current) {
+        progressInterval.current = setInterval(() => {
+          if (video && !video.paused) {
+            reportPlaybackProgress(itemId, ticksFromSeconds(video.currentTime)).catch(() => {});
+          }
+        }, 10000);
       }
-    }, 10000);
+    }).catch(() => {
+      // Autoplay blocked — keep the play button visible
+      setWaiting(true);
+      setPlaying(false);
+    });
+  }, [itemId]);
+
+  useEffect(() => {
+    // Try autoplay — if it works, great. If blocked (Safari/iOS), the play overlay stays.
+    startPlayback();
 
     return () => {
+      const video = videoRef.current;
       stopReporting();
-      reportPlaybackStopped(itemId, ticksFromSeconds(video.currentTime)).catch(() => {});
+      if (video) {
+        reportPlaybackStopped(itemId, ticksFromSeconds(video.currentTime)).catch(() => {});
+      }
     };
-  }, [itemId, stopReporting]);
+  }, [itemId, stopReporting, startPlayback]);
+
+  function handleTapToPlay() {
+    startPlayback();
+  }
 
   function handleVideoError() {
     const video = videoRef.current;
@@ -71,7 +86,12 @@ export default function Player({ itemId, onExit, onEnded }) {
       if (video) {
         video.src = getDirectStreamUrl(itemId);
         video.load();
-        video.play().catch(() => {});
+        video.play().then(() => {
+          setPlaying(true);
+          setWaiting(false);
+        }).catch(() => {
+          setWaiting(true);
+        });
       }
     } else {
       setError('Unable to play this video. The format may not be supported by your browser.');
@@ -82,8 +102,7 @@ export default function Player({ itemId, onExit, onEnded }) {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
-      video.play();
-      setPlaying(true);
+      video.play().then(() => setPlaying(true)).catch(() => {});
     } else {
       video.pause();
       setPlaying(false);
@@ -107,6 +126,11 @@ export default function Player({ itemId, onExit, onEnded }) {
       setDuration(video.duration);
       setError(null);
     }
+  }
+
+  function handlePlaying() {
+    setPlaying(true);
+    setWaiting(false);
   }
 
   function handleEnded() {
@@ -139,9 +163,16 @@ export default function Player({ itemId, onExit, onEnded }) {
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
         onError={handleVideoError}
-        autoPlay
+        onPlaying={handlePlaying}
         playsInline
+        webkit-playsinline=""
       />
+      {waiting && !error && (
+        <button className={styles.tapToPlay} onClick={handleTapToPlay}>
+          <div className={styles.bigPlay}>▶</div>
+          <div className={styles.tapText}>Tap to Play</div>
+        </button>
+      )}
       {error && (
         <div className={styles.error}>
           <p>{error}</p>
