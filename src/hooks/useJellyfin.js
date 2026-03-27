@@ -1,32 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getItems, getResumeItems, getEpisodes, getPlayedItems, getItemById, getVirtualFolders } from '../api/jellyfin';
+import { getItems, getEpisodes, getItemById, getVirtualFolders } from '../api/jellyfin';
 import { useApp } from '../context/AppContext';
 import { isRatingAllowed } from '../utils/ratings';
 
 function filterByRating(items, maxRating) {
   if (!maxRating) return items;
   return items.filter((item) => isRatingAllowed(item.OfficialRating, maxRating));
-}
-
-export function useLibraryItems(type) {
-  const { currentProfile } = useApp();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!currentProfile) return;
-    setLoading(true);
-    const params = { IncludeItemTypes: type, SortBy: 'SortName', SortOrder: 'Ascending' };
-    if (currentProfile.allowedLibraryId) {
-      params.ParentId = currentProfile.allowedLibraryId;
-    }
-    getItems(params)
-      .then((data) => setItems(filterByRating(data.Items || [], currentProfile.maxRating)))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, [currentProfile, type]);
-
-  return { items, loading };
 }
 
 export function useAllItems() {
@@ -41,53 +20,6 @@ export function useAllItems() {
       IncludeItemTypes: 'Movie,Series',
       SortBy: 'SortName',
       SortOrder: 'Ascending',
-    };
-    if (currentProfile.allowedLibraryId) {
-      params.ParentId = currentProfile.allowedLibraryId;
-    }
-    getItems(params)
-      .then((data) => setItems(filterByRating(data.Items || [], currentProfile.maxRating)))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, [currentProfile]);
-
-  return { items, loading };
-}
-
-export function useResumeItems() {
-  const { currentProfile } = useApp();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!currentProfile) return;
-    setLoading(true);
-    const params = {};
-    if (currentProfile.allowedLibraryId) {
-      params.ParentId = currentProfile.allowedLibraryId;
-    }
-    getResumeItems(params)
-      .then((data) => setItems(filterByRating(data.Items || [], currentProfile.maxRating)))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, [currentProfile]);
-
-  return { items, loading };
-}
-
-export function useNewItems() {
-  const { currentProfile } = useApp();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!currentProfile) return;
-    setLoading(true);
-    const params = {
-      SortBy: 'DateCreated',
-      SortOrder: 'Descending',
-      Limit: 20,
-      IncludeItemTypes: 'Movie,Series',
     };
     if (currentProfile.allowedLibraryId) {
       params.ParentId = currentProfile.allowedLibraryId;
@@ -148,21 +80,4 @@ export function useVirtualFolders() {
   useEffect(() => { refresh(); }, [refresh]);
 
   return { folders, loading, refresh };
-}
-
-export function useWatchHistory(libraryId) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const params = {};
-    if (libraryId) params.ParentId = libraryId;
-    setLoading(true);
-    getPlayedItems(params)
-      .then((data) => setItems(data.Items || []))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, [libraryId]);
-
-  return { items, loading };
 }

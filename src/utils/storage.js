@@ -69,7 +69,3 @@ export function setParentSettings(settings) {
 export function isSetupComplete() {
   return !!getServerUrl() && !!getAccessToken();
 }
-
-export function clearAll() {
-  Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
-}

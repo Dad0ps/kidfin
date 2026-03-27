@@ -17,7 +17,17 @@ NC='\033[0m'
 step() { echo -e "\n${GREEN}[STEP]${NC} $1"; }
 info() { echo -e "${YELLOW}  -->  ${NC}$1"; }
 fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
-ask()  { local var=$1 prompt=$2 default=$3; eval "val=\${$var:-}"; if [ -z "$val" ]; then read -rp "$(echo -e "${CYAN}$prompt${NC} [$default]: ")" val; val=${val:-$default}; fi; eval "$var=\"$val\""; }
+ask() {
+  local var=$1 prompt=$2 default=$3
+  local val="${!var:-}"
+  if [ -z "$val" ]; then
+    read -rp "$(echo -e "${CYAN}$prompt${NC} [$default]: ")" val
+    val=${val:-$default}
+  fi
+  # Sanitize: strip anything that could be shell injection
+  val=$(echo "$val" | tr -d '\`$();|&!')
+  declare -g "$var=$val"
+}
 
 echo ""
 echo "========================================="

@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { useAllItems } from '../hooks/useJellyfin';
 import { useSessionTimer } from '../hooks/useSessionTimer';
 import { applyTheme, getThemeForProfile } from '../utils/themes';
-import { applyFont } from '../utils/fonts';
+import { applyFont, applyFontSize } from '../utils/fonts';
 import Card from '../components/Card';
 import Player from '../components/Player';
 import PinPad from '../components/PinPad';
@@ -12,7 +12,7 @@ import styles from './Home.module.css';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { currentProfile, parentPin } = useApp();
+  const { currentProfile, parentPin, setParentUnlocked } = useApp();
   const { items, loading } = useAllItems();
   const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
   const [playingId, setPlayingId] = useState(null);
@@ -22,6 +22,7 @@ export default function Home() {
     if (currentProfile) {
       applyTheme(getThemeForProfile(currentProfile));
       if (currentProfile.font) applyFont(currentProfile.font);
+      if (currentProfile.fontSize) applyFontSize(currentProfile.fontSize);
     }
   }, [currentProfile]);
 
@@ -97,6 +98,7 @@ export default function Home() {
           title="Enter Parent PIN"
           onSubmit={(entered) => {
             if (entered === parentPin) {
+              setParentUnlocked(true);
               navigate('/parent');
               return true;
             }

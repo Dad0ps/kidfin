@@ -18,13 +18,6 @@ export const THEMES = {
 // Default theme (matches the original app colors)
 const DEFAULT_THEME = { name: 'Default', primary: '#ff6b6b', secondary: '#5ce0d8', glow: 'rgba(255, 107, 107, 0.3)' };
 
-export function getThemeList() {
-  return Object.entries(THEMES).map(([avatar, theme]) => ({
-    id: avatar,
-    ...theme,
-  }));
-}
-
 export function getThemeForProfile(profile) {
   if (!profile) return DEFAULT_THEME;
   // Explicit theme override takes priority

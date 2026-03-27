@@ -6,7 +6,7 @@ import Player from '../components/Player';
 import { useApp } from '../context/AppContext';
 import { useSessionTimer } from '../hooks/useSessionTimer';
 import { applyTheme, getThemeForProfile } from '../utils/themes';
-import { applyFont } from '../utils/fonts';
+import { applyFont, applyFontSize } from '../utils/fonts';
 import styles from './Detail.module.css';
 
 export default function Detail() {
@@ -23,6 +23,7 @@ export default function Detail() {
     if (currentProfile) {
       applyTheme(getThemeForProfile(currentProfile));
       if (currentProfile.font) applyFont(currentProfile.font);
+      if (currentProfile.fontSize) applyFontSize(currentProfile.fontSize);
     }
   }, [currentProfile]);
 

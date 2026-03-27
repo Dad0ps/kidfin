@@ -1,25 +1,57 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styles from './PinPad.module.css';
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_SECONDS = 30;
 
 export default function PinPad({ onSubmit, onCancel, title = 'Enter Parent PIN' }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [locked, setLocked] = useState(false);
+  const [lockCountdown, setLockCountdown] = useState(0);
+  const attempts = useRef(0);
+  const lockTimer = useRef(null);
+
+  function startLockout() {
+    setLocked(true);
+    setLockCountdown(LOCKOUT_SECONDS);
+    lockTimer.current = setInterval(() => {
+      setLockCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(lockTimer.current);
+          setLocked(false);
+          attempts.current = 0;
+          setError('');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
 
   function handleDigit(d) {
-    if (pin.length >= 4) return;
+    if (locked || pin.length >= 4) return;
     const next = pin + d;
     setPin(next);
     setError('');
     if (next.length === 4) {
       const ok = onSubmit(next);
       if (ok === false) {
-        setError('Wrong PIN');
-        setPin('');
+        attempts.current += 1;
+        if (attempts.current >= MAX_ATTEMPTS) {
+          setError(`Too many attempts. Wait ${LOCKOUT_SECONDS}s.`);
+          setPin('');
+          startLockout();
+        } else {
+          setError(`Wrong PIN (${MAX_ATTEMPTS - attempts.current} tries left)`);
+          setPin('');
+        }
       }
     }
   }
 
   function handleDelete() {
+    if (locked) return;
     setPin((p) => p.slice(0, -1));
     setError('');
   }
@@ -34,6 +66,7 @@ export default function PinPad({ onSubmit, onCancel, title = 'Enter Parent PIN' 
           ))}
         </div>
         {error && <div className={styles.error}>{error}</div>}
+        {locked && <div className={styles.lockout}>Locked for {lockCountdown}s</div>}
         <div className={styles.grid}>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, 'del'].map((key, i) => (
             <button
@@ -43,7 +76,7 @@ export default function PinPad({ onSubmit, onCancel, title = 'Enter Parent PIN' 
                 if (key === 'del') handleDelete();
                 else if (key !== null) handleDigit(String(key));
               }}
-              disabled={key === null}
+              disabled={key === null || locked}
             >
               {key === 'del' ? '⌫' : key}
             </button>

@@ -52,6 +52,13 @@
   font-size: 16px;
 }
 
+.lockout {
+  color: var(--accent-orange);
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

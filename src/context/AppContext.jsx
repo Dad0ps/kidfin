@@ -17,6 +17,7 @@ export function AppProvider({ children }) {
   const [currentProfile, setCurrentProfile] = useState(null);
   const [parentPin, setParentPinState] = useState(getParentPin);
   const [parentSettings, setParentSettingsState] = useState(getParentSettings);
+  const [parentUnlocked, setParentUnlocked] = useState(false);
 
   const updateChildProfiles = useCallback((profiles) => {
     setChildProfilesState(profiles);
@@ -46,6 +47,8 @@ export function AppProvider({ children }) {
     updateParentPin,
     parentSettings,
     updateParentSettings,
+    parentUnlocked,
+    setParentUnlocked,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
