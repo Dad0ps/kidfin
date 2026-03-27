@@ -296,6 +296,8 @@ export default function ParentDashboard() {
   const { folders } = useVirtualFolders();
 
   const [showAdd, setShowAdd] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [pinMessage, setPinMessage] = useState('');
 
   // Require PIN if navigated directly (not via profile select PIN flow)
   if (!parentUnlocked) {
@@ -313,8 +315,6 @@ export default function ParentDashboard() {
       />
     );
   }
-  const [newPin, setNewPin] = useState('');
-  const [pinMessage, setPinMessage] = useState('');
 
   function handleAddProfile(data) {
     addProfile(data);
