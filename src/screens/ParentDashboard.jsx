@@ -4,8 +4,8 @@ import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
 import { useVirtualFolders, useWatchHistory } from '../hooks/useJellyfin';
 import { getAllRatings } from '../utils/ratings';
-import { THEMES } from '../utils/themes';
-import { FONTS } from '../utils/fonts';
+import { THEMES, applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
+import { FONTS, applyFont, clearFont } from '../utils/fonts';
 import Modal from '../components/Modal';
 import styles from './ParentDashboard.module.css';
 
@@ -21,7 +21,7 @@ const SESSION_OPTIONS = [
   { value: 180, label: '3 hr' },
 ];
 
-function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
+function ProfileCard({ profile, folders, onSave, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState(profile.name);
   const [avatar, setAvatar] = useState(profile.avatar || '😊');
@@ -39,6 +39,35 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
     return (val) => { setter(val); setDirty(true); };
   }
 
+  function handleThemeChange(val) {
+    setTheme(val);
+    setDirty(true);
+    const previewProfile = { avatar, theme: val };
+    applyTheme(getThemeForProfile(previewProfile));
+  }
+
+  function handleFontChange(val) {
+    setFont(val);
+    setDirty(true);
+    applyFont(val);
+  }
+
+  function handleAvatarChange(val) {
+    setAvatar(val);
+    setDirty(true);
+    if (!theme) {
+      applyTheme(getThemeForProfile({ avatar: val, theme: '' }));
+    }
+  }
+
+  function handleToggle(nowExpanded) {
+    setExpanded(nowExpanded);
+    if (!nowExpanded) {
+      clearTheme();
+      clearFont();
+    }
+  }
+
   function handleSave() {
     onSave(profile.id, {
       name, avatar, allowedLibraryId, maxRating, theme, font,
@@ -46,6 +75,8 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
       bedtimeStart, bedtimeEnd,
     });
     setDirty(false);
+    clearTheme();
+    clearFont();
   }
 
   const themeName = theme ? THEMES[theme]?.name : THEMES[avatar]?.name || 'Default';
@@ -55,7 +86,7 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
   return (
     <div className={`${styles.card} ${expanded ? styles.cardExpanded : ''}`}>
       {/* Summary row — always visible */}
-      <button className={styles.cardHeader} onClick={() => setExpanded(!expanded)}>
+      <button className={styles.cardHeader} onClick={() => handleToggle(!expanded)}>
         <span className={styles.cardEmoji}>{avatar}</span>
         <div className={styles.cardInfo}>
           <div className={styles.cardName}>{name}</div>
@@ -88,7 +119,7 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
                   key={a}
                   type="button"
                   className={`${styles.avatarBtn} ${avatar === a ? styles.avatarActive : ''}`}
-                  onClick={() => markDirty(setAvatar)(a)}
+                  onClick={() => handleAvatarChange(a)}
                 >
                   {a}
                 </button>
@@ -130,7 +161,7 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
             </label>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Font</span>
-              <select className="input-field" value={font} onChange={(e) => markDirty(setFont)(e.target.value)}>
+              <select className="input-field" value={font} onChange={(e) => handleFontChange(e.target.value)}>
                 {FONTS.map((f) => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
@@ -160,7 +191,7 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
               <button
                 type="button"
                 className={`${styles.themeBtn} ${!theme ? styles.themeActive : ''}`}
-                onClick={() => markDirty(setTheme)('')}
+                onClick={() => handleThemeChange('')}
               >
                 <div className={styles.themeAuto}>Auto</div>
               </button>
@@ -169,7 +200,7 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
                   key={id}
                   type="button"
                   className={`${styles.themeBtn} ${theme === id ? styles.themeActive : ''}`}
-                  onClick={() => markDirty(setTheme)(id)}
+                  onClick={() => handleThemeChange(id)}
                   title={t.name}
                 >
                   <div className={styles.themeSwatch} style={{ background: `linear-gradient(135deg, ${t.primary}, ${t.secondary})` }} />
@@ -184,18 +215,16 @@ function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
             {dirty && (
               <button className="btn-primary" onClick={handleSave}>Save Changes</button>
             )}
-            {showHistory && (
-              <button className={styles.actionBtn} onClick={() => setShowHistoryPanel(!showHistoryPanel)}>
-                {showHistoryPanel ? 'Hide History' : 'Watch History'}
-              </button>
-            )}
+            <button className={styles.actionBtn} onClick={() => setShowHistoryPanel(!showHistoryPanel)}>
+              {showHistoryPanel ? 'Hide History' : 'Watch History'}
+            </button>
             <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => onDelete(profile.id)}>
               Delete Profile
             </button>
           </div>
 
           {showHistoryPanel && (
-            <WatchHistoryPanel profile={profile} />
+            <WatchHistoryPanel profile={{ ...profile, allowedLibraryId }} />
           )}
         </div>
       )}
@@ -304,7 +333,6 @@ export default function ParentDashboard() {
               folders={folders}
               onSave={(id, data) => editProfile(id, data)}
               onDelete={deleteProfile}
-              showHistory={parentSettings.showWatchHistory}
             />
           ))}
           {profiles.length === 0 && (
