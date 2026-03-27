@@ -106,7 +106,7 @@ export default function ProfileSelect() {
         Parent
       </button>
 
-      {showPin && (
+      {showPin && !profilePinTarget && (
         <PinPad
           title="Enter Parent PIN"
           digits={4}
@@ -120,7 +120,7 @@ export default function ProfileSelect() {
           title={`Enter ${profilePinTarget.name}'s PIN`}
           digits={2}
           onSubmit={handleProfilePinSubmit}
-          onCancel={() => setProfilePinTarget(null)}
+          onCancel={() => { setProfilePinTarget(null); setShowPin(false); }}
         />
       )}
     </div>
