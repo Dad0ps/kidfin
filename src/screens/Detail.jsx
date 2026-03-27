@@ -165,7 +165,14 @@ export default function Detail() {
                         src={getImageUrl(ep.Id, 'Primary', { maxHeight: 120 })}
                         alt=""
                         className={styles.epThumb}
-                        onError={(e) => { e.target.style.display = 'none'; }}
+                        onError={(e) => {
+                          if (!e.target.dataset.fallback) {
+                            e.target.dataset.fallback = '1';
+                            e.target.src = getImageUrl(ep.Id, 'Thumb', { maxHeight: 120 });
+                          } else {
+                            e.target.style.display = 'none';
+                          }
+                        }}
                       />
                       <div className={styles.epNumber}>E{ep.IndexNumber}</div>
                       <div className={styles.epInfo}>
