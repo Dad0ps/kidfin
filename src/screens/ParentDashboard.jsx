@@ -131,12 +131,15 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
               <span className={styles.fieldLabel}>Profile PIN (2 digits, optional)</span>
               <input
                 className="input-field"
-                type="password"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
                 maxLength={2}
                 placeholder="No PIN"
                 value={profilePin}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '');
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 2);
                   setProfilePin(val);
                   save({ profilePin: val });
                 }}
