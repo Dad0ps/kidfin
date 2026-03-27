@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
 import { useVirtualFolders } from '../hooks/useJellyfin';
+import PinPad from '../components/PinPad';
 import { getAllRatings } from '../utils/ratings';
 import { THEMES, applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
-import { FONTS, applyFont, clearFont } from '../utils/fonts';
+import { FONTS, applyFont, applyFontSize, clearFont, DEFAULT_FONT_SIZE, MIN_FONT_SIZE, MAX_FONT_SIZE } from '../utils/fonts';
 import Modal from '../components/Modal';
 import styles from './ParentDashboard.module.css';
 
@@ -29,6 +30,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
   const [maxRating, setMaxRating] = useState(profile.maxRating || '');
   const [theme, setTheme] = useState(profile.theme || '');
   const [font, setFont] = useState(profile.font || 'nunito');
+  const [fontSize, setFontSize] = useState(profile.fontSize || DEFAULT_FONT_SIZE);
   const [sessionLimit, setSessionLimit] = useState(profile.sessionLimit || 0);
   const [bedtimeStart, setBedtimeStart] = useState(profile.bedtimeStart || '');
   const [bedtimeEnd, setBedtimeEnd] = useState(profile.bedtimeEnd || '');
@@ -37,6 +39,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
   function save(overrides = {}) {
     const data = {
       name, avatar, allowedLibraryId, maxRating, theme, font,
+      fontSize: Number(fontSize),
       sessionLimit: Number(sessionLimit),
       bedtimeStart, bedtimeEnd,
       ...overrides,
@@ -67,6 +70,13 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
     setFont(val);
     save({ font: val });
     applyFont(val);
+  }
+
+  function handleFontSizeChange(val) {
+    const size = Number(val);
+    setFontSize(size);
+    save({ fontSize: size });
+    applyFontSize(size);
   }
 
   function handleAvatarChange(val) {
@@ -175,6 +185,23 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
             </label>
           </div>
 
+          {/* Font size */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Text Size ({fontSize}px)</span>
+            <div className={styles.fontSizeRow}>
+              <span className={styles.fontSizeLabel}>A</span>
+              <input
+                type="range"
+                min={MIN_FONT_SIZE}
+                max={MAX_FONT_SIZE}
+                value={fontSize}
+                onChange={(e) => handleFontSizeChange(e.target.value)}
+                className={styles.fontSizeSlider}
+              />
+              <span className={styles.fontSizeLabelLg}>A</span>
+            </div>
+          </div>
+
           {/* Bedtime */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>Bedtime</span>
@@ -264,11 +291,28 @@ function AddProfileForm({ folders, onSave, onCancel }) {
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
-  const { parentPin, updateParentPin, parentSettings, updateParentSettings } = useApp();
+  const { parentPin, updateParentPin, parentSettings, updateParentSettings, parentUnlocked, setParentUnlocked } = useApp();
   const { profiles, addProfile, editProfile, deleteProfile } = useProfiles();
   const { folders } = useVirtualFolders();
 
   const [showAdd, setShowAdd] = useState(false);
+
+  // Require PIN if navigated directly (not via profile select PIN flow)
+  if (!parentUnlocked) {
+    return (
+      <PinPad
+        title="Enter Parent PIN"
+        onSubmit={(entered) => {
+          if (entered === parentPin) {
+            setParentUnlocked(true);
+            return true;
+          }
+          return false;
+        }}
+        onCancel={() => navigate('/profiles')}
+      />
+    );
+  }
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
 

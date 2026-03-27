@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import ProfileCard from '../components/ProfileCard';
 import PinPad from '../components/PinPad';
 import { applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
-import { applyFont, clearFont } from '../utils/fonts';
+import { applyFont, applyFontSize, clearFont } from '../utils/fonts';
 import styles from './ProfileSelect.module.css';
 
 function isInBedtime(profile) {
@@ -27,13 +27,14 @@ function isInBedtime(profile) {
 
 export default function ProfileSelect() {
   const navigate = useNavigate();
-  const { childProfiles, setCurrentProfile, parentPin } = useApp();
+  const { childProfiles, setCurrentProfile, parentPin, setParentUnlocked } = useApp();
   const [showPin, setShowPin] = useState(false);
   const [bedtimeMessage, setBedtimeMessage] = useState(null);
 
   // Reset to defaults on profile select screen
   clearTheme();
   clearFont();
+  setParentUnlocked(false);
 
   function handleProfileClick(profile) {
     if (isInBedtime(profile)) {
@@ -44,11 +45,13 @@ export default function ProfileSelect() {
     setCurrentProfile(profile);
     applyTheme(getThemeForProfile(profile));
     if (profile.font) applyFont(profile.font);
+    if (profile.fontSize) applyFontSize(profile.fontSize);
     navigate('/home');
   }
 
   function handlePinSubmit(entered) {
     if (entered === parentPin) {
+      setParentUnlocked(true);
       navigate('/parent');
       return true;
     }

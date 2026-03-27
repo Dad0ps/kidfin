@@ -11,7 +11,7 @@ const RATING_ORDER = [
   'TV-MA',
 ];
 
-export function getRatingIndex(rating) {
+function getRatingIndex(rating) {
   if (!rating) return -1;
   const idx = RATING_ORDER.indexOf(rating);
   return idx === -1 ? -1 : idx;

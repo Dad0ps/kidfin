@@ -48,15 +48,6 @@ export async function getItems(params = {}) {
   return apiFetch(`/Users/${userId}/Items?${query}`);
 }
 
-export async function getResumeItems(params = {}) {
-  const userId = getAdminUserId();
-  const query = new URLSearchParams({
-    Fields: 'Overview,Genres,OfficialRating,PrimaryImageAspectRatio',
-    ...params,
-  });
-  return apiFetch(`/Users/${userId}/Items/Resume?${query}`);
-}
-
 export async function getItemById(itemId) {
   const userId = getAdminUserId();
   return apiFetch(`/Users/${userId}/Items/${itemId}?Fields=MediaStreams,Overview,Genres,OfficialRating`);
@@ -101,17 +92,6 @@ export async function reportPlaybackStopped(itemId, positionTicks) {
     method: 'POST',
     body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks }),
   });
-}
-
-export async function getPlayedItems(params = {}) {
-  const userId = getAdminUserId();
-  const query = new URLSearchParams({
-    Recursive: 'true',
-    Filters: 'IsPlayed',
-    Fields: 'Overview,Genres,OfficialRating',
-    ...params,
-  });
-  return apiFetch(`/Users/${userId}/Items?${query}`);
 }
 
 export function getImageUrl(itemId, type = 'Primary', params = {}) {
