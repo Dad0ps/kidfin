@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
-import { useVirtualFolders, useWatchHistory } from '../hooks/useJellyfin';
+import { useVirtualFolders } from '../hooks/useJellyfin';
 import { getAllRatings } from '../utils/ratings';
 import { THEMES, applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
 import { FONTS, applyFont, clearFont } from '../utils/fonts';
@@ -32,7 +32,6 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
   const [sessionLimit, setSessionLimit] = useState(profile.sessionLimit || 0);
   const [bedtimeStart, setBedtimeStart] = useState(profile.bedtimeStart || '');
   const [bedtimeEnd, setBedtimeEnd] = useState(profile.bedtimeEnd || '');
-  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const nameTimer = useRef(null);
 
   function save(overrides = {}) {
@@ -219,35 +218,12 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
 
           {/* Actions */}
           <div className={styles.cardActions}>
-            <button className={styles.actionBtn} onClick={() => setShowHistoryPanel(!showHistoryPanel)}>
-              {showHistoryPanel ? 'Hide History' : 'Watch History'}
-            </button>
             <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => onDelete(profile.id)}>
               Delete Profile
             </button>
           </div>
-
-          {showHistoryPanel && (
-            <WatchHistoryPanel profile={{ ...profile, allowedLibraryId }} />
-          )}
         </div>
       )}
-    </div>
-  );
-}
-
-function WatchHistoryPanel({ profile }) {
-  const { items, loading } = useWatchHistory(profile.allowedLibraryId);
-  if (loading) return <p className={styles.muted}>Loading...</p>;
-  if (items.length === 0) return <p className={styles.muted}>No watch history yet.</p>;
-  return (
-    <div className={styles.historyList}>
-      {items.slice(0, 50).map((item) => (
-        <div key={item.Id} className={styles.historyItem}>
-          <span className={styles.historyName}>{item.Name}</span>
-          <span className={styles.historyType}>{item.Type}</span>
-        </div>
-      ))}
     </div>
   );
 }
