@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useAllItems } from '../hooks/useJellyfin';
 import { useSessionTimer } from '../hooks/useSessionTimer';
+import { applyTheme, getThemeForProfile } from '../utils/themes';
+import { applyFont } from '../utils/fonts';
 import Card from '../components/Card';
 import Player from '../components/Player';
 import styles from './Home.module.css';
@@ -13,6 +15,13 @@ export default function Home() {
   const { items, loading } = useAllItems();
   const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
   const [playingId, setPlayingId] = useState(null);
+
+  useEffect(() => {
+    if (currentProfile) {
+      applyTheme(getThemeForProfile(currentProfile));
+      if (currentProfile.font) applyFont(currentProfile.font);
+    }
+  }, [currentProfile]);
 
   if (!currentProfile) {
     navigate('/profiles');

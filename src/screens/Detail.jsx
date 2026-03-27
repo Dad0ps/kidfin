@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useItemDetail, useEpisodes } from '../hooks/useJellyfin';
 import { getImageUrl } from '../api/jellyfin';
 import Player from '../components/Player';
 import { useApp } from '../context/AppContext';
 import { useSessionTimer } from '../hooks/useSessionTimer';
+import { applyTheme, getThemeForProfile } from '../utils/themes';
+import { applyFont } from '../utils/fonts';
 import styles from './Detail.module.css';
 
 export default function Detail() {
@@ -16,6 +18,13 @@ export default function Detail() {
   const isSeries = item?.Type === 'Series';
   const { episodes, loading: epLoading } = useEpisodes(isSeries ? id : null);
   const [playingId, setPlayingId] = useState(null);
+
+  useEffect(() => {
+    if (currentProfile) {
+      applyTheme(getThemeForProfile(currentProfile));
+      if (currentProfile.font) applyFont(currentProfile.font);
+    }
+  }, [currentProfile]);
 
   if (!currentProfile) {
     navigate('/profiles');

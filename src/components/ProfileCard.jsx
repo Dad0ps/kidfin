@@ -1,16 +1,16 @@
+import { getThemeForProfile } from '../utils/themes';
 import styles from './ProfileCard.module.css';
 
-const COLORS = ['#ff6b6b', '#5ce0d8', '#a78bfa', '#ff8a5c', '#6ee7b7', '#fbbf24'];
-
 export default function ProfileCard({ profile, onClick }) {
-  const bgColor = COLORS[profile.name.length % COLORS.length];
+  const theme = getThemeForProfile(profile);
 
   return (
     <button className={styles.card} onClick={onClick}>
-      <div className={styles.avatar} style={{ background: bgColor }}>
+      <div className={styles.avatar} style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}>
         <span className={styles.emoji}>{profile.avatar || '😊'}</span>
       </div>
       <div className={styles.name}>{profile.name}</div>
+      <div className={styles.themeName}>{theme.name}</div>
     </button>
   );
 }

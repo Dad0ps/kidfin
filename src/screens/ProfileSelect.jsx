@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProfileCard from '../components/ProfileCard';
 import PinPad from '../components/PinPad';
+import { applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
+import { applyFont, clearFont } from '../utils/fonts';
 import styles from './ProfileSelect.module.css';
 
 function isInBedtime(profile) {
@@ -29,6 +31,10 @@ export default function ProfileSelect() {
   const [showPin, setShowPin] = useState(false);
   const [bedtimeMessage, setBedtimeMessage] = useState(null);
 
+  // Reset to defaults on profile select screen
+  clearTheme();
+  clearFont();
+
   function handleProfileClick(profile) {
     if (isInBedtime(profile)) {
       setBedtimeMessage(profile.name);
@@ -36,6 +42,8 @@ export default function ProfileSelect() {
       return;
     }
     setCurrentProfile(profile);
+    applyTheme(getThemeForProfile(profile));
+    if (profile.font) applyFont(profile.font);
     navigate('/home');
   }
 

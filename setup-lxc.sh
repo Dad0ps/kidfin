@@ -2,41 +2,61 @@
 # KidFin LXC Setup Script for Proxmox
 # Run this on your Proxmox host (not inside an LXC)
 #
-# Usage: bash setup-lxc.sh
+# Usage:
+#   Interactive:  bash setup-lxc.sh
+#   Non-interactive: CTID=210 IP=dhcp bash setup-lxc.sh
 #
-# Prerequisites:
-#   - Proxmox VE with pveam available
-#   - An existing network bridge (default: vmbr0)
-#   - The KidFin repo: https://github.com/Dad0ps/kidfin.git
-
-# --- Configuration (edit these to match your environment) ---
-CTID=210
-HOSTNAME="kidfin"
-MEMORY=512
-SWAP=256
-DISK=4
-CORES=1
-BRIDGE="vmbr0"
-STORAGE="local-lvm"
-TEMPLATE_STORAGE="local"
-IP="192.168.0.204/24"
-GATEWAY="192.168.0.1"
-# -----------------------------------------------------------
+# All variables can be set via environment or will be prompted.
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 step() { echo -e "\n${GREEN}[STEP]${NC} $1"; }
 info() { echo -e "${YELLOW}  -->  ${NC}$1"; }
 fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
+ask()  { local var=$1 prompt=$2 default=$3; eval "val=\${$var:-}"; if [ -z "$val" ]; then read -rp "$(echo -e "${CYAN}$prompt${NC} [$default]: ")" val; val=${val:-$default}; fi; eval "$var=\"$val\""; }
 
 echo ""
 echo "========================================="
 echo "  KidFin LXC Setup"
-echo "  Container: $CTID | IP: $IP"
 echo "========================================="
+echo ""
+
+# --- Interactive configuration ---
+ask CTID        "Container ID"          "210"
+ask HOSTNAME    "Hostname"              "kidfin"
+ask MEMORY      "Memory (MB)"           "512"
+ask SWAP        "Swap (MB)"             "256"
+ask DISK        "Disk size (GB)"        "4"
+ask CORES       "CPU cores"             "1"
+ask BRIDGE      "Network bridge"        "vmbr0"
+ask STORAGE     "Storage pool"          "local-lvm"
+ask TEMPLATE_STORAGE "Template storage" "local"
+ask IP          "IP address (CIDR or 'dhcp')" "dhcp"
+
+if [ "$IP" != "dhcp" ]; then
+    # Derive default gateway from IP (replace last octet with .1)
+    DEFAULT_GW=$(echo "$IP" | sed 's|\.[0-9]*/.*|.1|')
+    ask GATEWAY "Gateway" "$DEFAULT_GW"
+fi
+
+ask KIDFIN_PORT "KidFin port" "3000"
+
+echo ""
+echo -e "${CYAN}--- Configuration ---${NC}"
+echo "  Container:  $CTID ($HOSTNAME)"
+echo "  Resources:  ${MEMORY}MB RAM, ${CORES} core(s), ${DISK}GB disk"
+echo "  Network:    $IP (bridge: $BRIDGE)"
+echo "  Port:       $KIDFIN_PORT"
+echo ""
+read -rp "$(echo -e "${CYAN}Proceed? (y/n):${NC} ")" CONFIRM
+if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+    echo "Aborted."
+    exit 0
+fi
 
 # --- Destroy existing container if present ---
 if pct status "$CTID" &>/dev/null; then
@@ -92,7 +112,6 @@ step "Starting container..."
 pct start "$CTID" || fail "Container failed to start"
 sleep 5
 
-# Verify it's running
 if [ "$(pct status "$CTID" | awk '{print $2}')" != "running" ]; then
     fail "Container is not running"
 fi
@@ -141,11 +160,11 @@ info "Repo cloned to /opt/kidfin"
 
 # --- Build and run ---
 step "Building Docker image (this may take a minute)..."
-pct exec "$CTID" -- bash -c 'cd /opt/kidfin && docker compose build --no-cache 2>&1' || fail "Docker build failed"
+pct exec "$CTID" -- bash -c "cd /opt/kidfin && KIDFIN_PORT=${KIDFIN_PORT} docker compose build --no-cache 2>&1" || fail "Docker build failed"
 info "Image built"
 
 step "Starting KidFin container..."
-pct exec "$CTID" -- bash -c 'cd /opt/kidfin && docker compose up -d 2>&1' || fail "Docker compose up failed"
+pct exec "$CTID" -- bash -c "cd /opt/kidfin && KIDFIN_PORT=${KIDFIN_PORT} docker compose up -d 2>&1" || fail "Docker compose up failed"
 sleep 3
 
 # --- Verify ---
@@ -153,7 +172,7 @@ step "Verifying KidFin is responding..."
 TRIES=0
 MAX_TRIES=10
 while [ $TRIES -lt $MAX_TRIES ]; do
-    if pct exec "$CTID" -- curl -s -o /dev/null -w '%{http_code}' http://localhost:3000 | grep -q "200"; then
+    if pct exec "$CTID" -- curl -s -o /dev/null -w '%{http_code}' "http://localhost:${KIDFIN_PORT}" | grep -q "200"; then
         break
     fi
     TRIES=$((TRIES + 1))
@@ -167,7 +186,7 @@ if [ $TRIES -eq $MAX_TRIES ]; then
     echo ""
     info "Docker logs:"
     pct exec "$CTID" -- docker compose -f /opt/kidfin/docker-compose.yml logs --tail=20
-    fail "KidFin is not responding on port 3000 after 20 seconds"
+    fail "KidFin is not responding on port ${KIDFIN_PORT} after 20 seconds"
 fi
 info "KidFin is live"
 
@@ -177,7 +196,7 @@ CONTAINER_IP=$(pct exec "$CTID" -- hostname -I | awk '{print $1}')
 echo ""
 echo -e "${GREEN}=========================================${NC}"
 echo -e "${GREEN}  KidFin is running${NC}"
-echo -e "${GREEN}  http://${CONTAINER_IP}:3000${NC}"
+echo -e "${GREEN}  http://${CONTAINER_IP}:${KIDFIN_PORT}${NC}"
 echo -e "${GREEN}=========================================${NC}"
 echo ""
 echo "Useful commands:"
