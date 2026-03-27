@@ -1,0 +1,49 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  position: relative;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 48px;
+  color: var(--text-primary);
+}
+
+.profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  max-width: 700px;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 20px;
+  text-align: center;
+}
+
+.parentBtn {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  transition: background 0.2s;
+}
+
+.parentBtn:hover {
+  background: rgba(167, 139, 250, 0.2);
+  color: var(--accent-purple);
+}

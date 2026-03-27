@@ -1,0 +1,131 @@
+import { getServerUrl, getAccessToken, getAdminUserId } from '../utils/storage';
+
+function getAuthHeader() {
+  const token = getAccessToken();
+  return `MediaBrowser Token="${token}", Client="KidFin", Device="Browser", DeviceId="kidfin-web", Version="1.0.0"`;
+}
+
+async function apiFetch(path, options = {}) {
+  const serverUrl = getServerUrl().replace(/\/+$/, '');
+  const res = await fetch(`${serverUrl}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Emby-Authorization': getAuthHeader(),
+      ...options.headers,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Jellyfin API error: ${res.status} ${res.statusText}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+export async function authenticateByName(serverUrl, username, password) {
+  const url = serverUrl.replace(/\/+$/, '');
+  const res = await fetch(`${url}/Users/AuthenticateByName`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Emby-Authorization': `MediaBrowser Client="KidFin", Device="Browser", DeviceId="kidfin-web", Version="1.0.0"`,
+    },
+    body: JSON.stringify({ Username: username, Pw: password }),
+  });
+  if (!res.ok) {
+    throw new Error('Authentication failed. Check your credentials and server URL.');
+  }
+  return res.json();
+}
+
+export async function getItems(params = {}) {
+  const userId = getAdminUserId();
+  const query = new URLSearchParams({
+    Recursive: 'true',
+    Fields: 'Overview,Genres,OfficialRating,PrimaryImageAspectRatio',
+    ...params,
+  });
+  return apiFetch(`/Users/${userId}/Items?${query}`);
+}
+
+export async function getResumeItems(params = {}) {
+  const userId = getAdminUserId();
+  const query = new URLSearchParams({
+    Fields: 'Overview,Genres,OfficialRating,PrimaryImageAspectRatio',
+    ...params,
+  });
+  return apiFetch(`/Users/${userId}/Items/Resume?${query}`);
+}
+
+export async function getItemById(itemId) {
+  const userId = getAdminUserId();
+  return apiFetch(`/Users/${userId}/Items/${itemId}`);
+}
+
+export async function getEpisodes(seriesId, params = {}) {
+  const userId = getAdminUserId();
+  const query = new URLSearchParams({
+    userId,
+    Fields: 'Overview,PrimaryImageAspectRatio',
+    ...params,
+  });
+  return apiFetch(`/Shows/${seriesId}/Episodes?${query}`);
+}
+
+export async function getVirtualFolders() {
+  return apiFetch('/Library/VirtualFolders');
+}
+
+export async function reportPlaybackStart(itemId, positionTicks = 0) {
+  return apiFetch('/Sessions/Playing', {
+    method: 'POST',
+    body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks }),
+  });
+}
+
+export async function reportPlaybackProgress(itemId, positionTicks, isPaused = false) {
+  return apiFetch('/Sessions/Playing/Progress', {
+    method: 'POST',
+    body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks, IsPaused: isPaused }),
+  });
+}
+
+export async function reportPlaybackStopped(itemId, positionTicks) {
+  return apiFetch('/Sessions/Playing/Stopped', {
+    method: 'POST',
+    body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks }),
+  });
+}
+
+export async function getPlayedItems(params = {}) {
+  const userId = getAdminUserId();
+  const query = new URLSearchParams({
+    Recursive: 'true',
+    Filters: 'IsPlayed',
+    Fields: 'Overview,Genres,OfficialRating',
+    ...params,
+  });
+  return apiFetch(`/Users/${userId}/Items?${query}`);
+}
+
+export function getImageUrl(itemId, type = 'Primary', params = {}) {
+  const serverUrl = getServerUrl().replace(/\/+$/, '');
+  const defaults = type === 'Primary' ? { maxHeight: 400 } : type === 'Backdrop' ? { maxWidth: 1280 } : {};
+  const query = new URLSearchParams({ ...defaults, ...params });
+  return `${serverUrl}/Items/${itemId}/Images/${type}?${query}`;
+}
+
+export function getStreamUrl(itemId) {
+  const serverUrl = getServerUrl().replace(/\/+$/, '');
+  const token = getAccessToken();
+  const params = new URLSearchParams({
+    api_key: token,
+    Container: 'mp4,webm',
+    VideoCodec: 'h264,h265,vp9',
+    AudioCodec: 'aac,mp3,opus',
+    MaxStreamingBitrate: '20000000',
+    TranscodingContainer: 'mp4',
+    TranscodingProtocol: 'http',
+  });
+  return `${serverUrl}/Videos/${itemId}/stream.mp4?${params}`;
+}
