@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
@@ -32,29 +32,47 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
   const [sessionLimit, setSessionLimit] = useState(profile.sessionLimit || 0);
   const [bedtimeStart, setBedtimeStart] = useState(profile.bedtimeStart || '');
   const [bedtimeEnd, setBedtimeEnd] = useState(profile.bedtimeEnd || '');
-  const [dirty, setDirty] = useState(false);
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const nameTimer = useRef(null);
 
-  function markDirty(setter) {
-    return (val) => { setter(val); setDirty(true); };
+  function save(overrides = {}) {
+    const data = {
+      name, avatar, allowedLibraryId, maxRating, theme, font,
+      sessionLimit: Number(sessionLimit),
+      bedtimeStart, bedtimeEnd,
+      ...overrides,
+    };
+    onSave(profile.id, data);
+  }
+
+  function handleChange(setter, key) {
+    return (val) => {
+      setter(val);
+      save({ [key]: key === 'sessionLimit' ? Number(val) : val });
+    };
+  }
+
+  function handleNameChange(val) {
+    setName(val);
+    if (nameTimer.current) clearTimeout(nameTimer.current);
+    nameTimer.current = setTimeout(() => save({ name: val }), 500);
   }
 
   function handleThemeChange(val) {
     setTheme(val);
-    setDirty(true);
-    const previewProfile = { avatar, theme: val };
-    applyTheme(getThemeForProfile(previewProfile));
+    save({ theme: val });
+    applyTheme(getThemeForProfile({ avatar, theme: val }));
   }
 
   function handleFontChange(val) {
     setFont(val);
-    setDirty(true);
+    save({ font: val });
     applyFont(val);
   }
 
   function handleAvatarChange(val) {
     setAvatar(val);
-    setDirty(true);
+    save({ avatar: val });
     if (!theme) {
       applyTheme(getThemeForProfile({ avatar: val, theme: '' }));
     }
@@ -66,17 +84,6 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
       clearTheme();
       clearFont();
     }
-  }
-
-  function handleSave() {
-    onSave(profile.id, {
-      name, avatar, allowedLibraryId, maxRating, theme, font,
-      sessionLimit: Number(sessionLimit),
-      bedtimeStart, bedtimeEnd,
-    });
-    setDirty(false);
-    clearTheme();
-    clearFont();
   }
 
   const themeName = theme ? THEMES[theme]?.name : THEMES[avatar]?.name || 'Default';
@@ -107,7 +114,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
           <div className={styles.row}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Name</span>
-              <input className="input-field" value={name} onChange={(e) => markDirty(setName)(e.target.value)} required />
+              <input className="input-field" value={name} onChange={(e) => handleNameChange(e.target.value)} required />
             </label>
           </div>
 
@@ -131,7 +138,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
           <div className={styles.row}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Library</span>
-              <select className="input-field" value={allowedLibraryId} onChange={(e) => markDirty(setAllowedLibraryId)(e.target.value)}>
+              <select className="input-field" value={allowedLibraryId} onChange={(e) => handleChange(setAllowedLibraryId, 'allowedLibraryId')(e.target.value)}>
                 <option value="">All Libraries</option>
                 {folders.map((f) => (
                   <option key={f.ItemId} value={f.ItemId}>{f.Name}</option>
@@ -140,7 +147,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
             </label>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Max Rating</span>
-              <select className="input-field" value={maxRating} onChange={(e) => markDirty(setMaxRating)(e.target.value)}>
+              <select className="input-field" value={maxRating} onChange={(e) => handleChange(setMaxRating, 'maxRating')(e.target.value)}>
                 <option value="">No Limit</option>
                 {getAllRatings().map((r) => (
                   <option key={r} value={r}>{r}</option>
@@ -153,7 +160,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
           <div className={styles.row}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Session Limit</span>
-              <select className="input-field" value={sessionLimit} onChange={(e) => markDirty(setSessionLimit)(e.target.value)}>
+              <select className="input-field" value={sessionLimit} onChange={(e) => handleChange(setSessionLimit, 'sessionLimit')(e.target.value)}>
                 {SESSION_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
@@ -173,11 +180,11 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
           <div className={styles.field}>
             <span className={styles.fieldLabel}>Bedtime</span>
             <div className={styles.bedtimeRow}>
-              <input className="input-field" type="time" value={bedtimeStart} onChange={(e) => markDirty(setBedtimeStart)(e.target.value)} />
+              <input className="input-field" type="time" value={bedtimeStart} onChange={(e) => handleChange(setBedtimeStart, 'bedtimeStart')(e.target.value)} />
               <span className={styles.bedtimeTo}>to</span>
-              <input className="input-field" type="time" value={bedtimeEnd} onChange={(e) => markDirty(setBedtimeEnd)(e.target.value)} />
+              <input className="input-field" type="time" value={bedtimeEnd} onChange={(e) => handleChange(setBedtimeEnd, 'bedtimeEnd')(e.target.value)} />
               {(bedtimeStart || bedtimeEnd) && (
-                <button type="button" className={styles.clearBtn} onClick={() => { markDirty(setBedtimeStart)(''); setBedtimeEnd(''); }}>
+                <button type="button" className={styles.clearBtn} onClick={() => { setBedtimeStart(''); setBedtimeEnd(''); save({ bedtimeStart: '', bedtimeEnd: '' }); }}>
                   Clear
                 </button>
               )}
@@ -212,9 +219,6 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
 
           {/* Actions */}
           <div className={styles.cardActions}>
-            {dirty && (
-              <button className="btn-primary" onClick={handleSave}>Save Changes</button>
-            )}
             <button className={styles.actionBtn} onClick={() => setShowHistoryPanel(!showHistoryPanel)}>
               {showHistoryPanel ? 'Hide History' : 'Watch History'}
             </button>
