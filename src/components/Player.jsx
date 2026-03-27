@@ -64,25 +64,50 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
   // Keep screen awake during playback
   useEffect(() => {
     let wakeLock = null;
+    let noSleepVideo = null;
 
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
+    async function keepAwake() {
+      // Try Wake Lock API first (requires HTTPS)
+      if ('wakeLock' in navigator) {
+        try {
           wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch {}
+          return;
+        } catch {}
+      }
+
+      // Fallback: silent video loop tricks iOS/Safari into staying awake
+      noSleepVideo = document.createElement('video');
+      noSleepVideo.setAttribute('playsinline', '');
+      noSleepVideo.setAttribute('webkit-playsinline', '');
+      noSleepVideo.setAttribute('muted', '');
+      noSleepVideo.muted = true;
+      noSleepVideo.loop = true;
+      noSleepVideo.style.position = 'fixed';
+      noSleepVideo.style.top = '-1px';
+      noSleepVideo.style.left = '-1px';
+      noSleepVideo.style.width = '1px';
+      noSleepVideo.style.height = '1px';
+      noSleepVideo.style.opacity = '0.01';
+      // Minimal valid mp4 (tiny silent video)
+      noSleepVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhtZGF0AAAA1m1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2YzU4Ljk3';
+      document.body.appendChild(noSleepVideo);
+      noSleepVideo.play().catch(() => {});
     }
 
-    requestWakeLock();
+    keepAwake();
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') requestWakeLock();
+      if (document.visibilityState === 'visible') keepAwake();
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (wakeLock) wakeLock.release().catch(() => {});
+      if (noSleepVideo) {
+        noSleepVideo.pause();
+        noSleepVideo.remove();
+      }
     };
   }, []);
 
