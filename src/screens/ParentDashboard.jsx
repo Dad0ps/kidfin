@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
@@ -14,155 +14,192 @@ const THEME_ENTRIES = Object.entries(THEMES);
 
 const SESSION_OPTIONS = [
   { value: 0, label: 'No Limit' },
-  { value: 30, label: '30 minutes' },
-  { value: 60, label: '1 hour' },
-  { value: 90, label: '1.5 hours' },
-  { value: 120, label: '2 hours' },
-  { value: 180, label: '3 hours' },
+  { value: 30, label: '30 min' },
+  { value: 60, label: '1 hr' },
+  { value: 90, label: '1.5 hr' },
+  { value: 120, label: '2 hr' },
+  { value: 180, label: '3 hr' },
 ];
 
-function ProfileForm({ initial, folders, onSave, onCancel }) {
-  const [name, setName] = useState(initial?.name || '');
-  const [avatar, setAvatar] = useState(initial?.avatar || '😊');
-  const [allowedLibraryId, setAllowedLibraryId] = useState(initial?.allowedLibraryId || '');
-  const [maxRating, setMaxRating] = useState(initial?.maxRating || '');
-  const [theme, setTheme] = useState(initial?.theme || '');
-  const [font, setFont] = useState(initial?.font || 'nunito');
-  const [sessionLimit, setSessionLimit] = useState(initial?.sessionLimit || 0);
-  const [bedtimeStart, setBedtimeStart] = useState(initial?.bedtimeStart || '');
-  const [bedtimeEnd, setBedtimeEnd] = useState(initial?.bedtimeEnd || '');
+function ProfileCard({ profile, folders, onSave, onDelete, showHistory }) {
+  const [expanded, setExpanded] = useState(false);
+  const [name, setName] = useState(profile.name);
+  const [avatar, setAvatar] = useState(profile.avatar || '😊');
+  const [allowedLibraryId, setAllowedLibraryId] = useState(profile.allowedLibraryId || '');
+  const [maxRating, setMaxRating] = useState(profile.maxRating || '');
+  const [theme, setTheme] = useState(profile.theme || '');
+  const [font, setFont] = useState(profile.font || 'nunito');
+  const [sessionLimit, setSessionLimit] = useState(profile.sessionLimit || 0);
+  const [bedtimeStart, setBedtimeStart] = useState(profile.bedtimeStart || '');
+  const [bedtimeEnd, setBedtimeEnd] = useState(profile.bedtimeEnd || '');
+  const [dirty, setDirty] = useState(false);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    onSave({
+  function markDirty(setter) {
+    return (val) => { setter(val); setDirty(true); };
+  }
+
+  function handleSave() {
+    onSave(profile.id, {
       name, avatar, allowedLibraryId, maxRating, theme, font,
       sessionLimit: Number(sessionLimit),
       bedtimeStart, bedtimeEnd,
     });
+    setDirty(false);
   }
 
+  const themeName = theme ? THEMES[theme]?.name : THEMES[avatar]?.name || 'Default';
+  const fontName = FONTS.find((f) => f.id === font)?.name || 'Default';
+  const libraryName = folders.find((f) => f.ItemId === allowedLibraryId)?.Name || 'All';
+
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <label className={styles.label}>
-        Name
-        <input className="input-field" value={name} onChange={(e) => setName(e.target.value)} required />
-      </label>
-
-      <div className={styles.label}>
-        Avatar
-        <div className={styles.avatarGrid}>
-          {AVATARS.map((a) => (
-            <button
-              key={a}
-              type="button"
-              className={`${styles.avatarBtn} ${avatar === a ? styles.avatarActive : ''}`}
-              onClick={() => setAvatar(a)}
-            >
-              {a}
-            </button>
-          ))}
+    <div className={`${styles.card} ${expanded ? styles.cardExpanded : ''}`}>
+      {/* Summary row — always visible */}
+      <button className={styles.cardHeader} onClick={() => setExpanded(!expanded)}>
+        <span className={styles.cardEmoji}>{avatar}</span>
+        <div className={styles.cardInfo}>
+          <div className={styles.cardName}>{name}</div>
+          <div className={styles.cardMeta}>
+            {maxRating || 'No limit'}
+            {sessionLimit > 0 && ` · ${sessionLimit}min`}
+            {bedtimeStart && bedtimeEnd && ` · ${bedtimeStart}-${bedtimeEnd}`}
+            {` · ${libraryName}`}
+          </div>
         </div>
-      </div>
+        <span className={styles.cardChevron}>{expanded ? '▲' : '▼'}</span>
+      </button>
 
-      <div className={styles.label}>
-        Theme {theme ? `(${THEMES[theme]?.name})` : '(auto from avatar)'}
-        <div className={styles.themeGrid}>
-          <button
-            type="button"
-            className={`${styles.themeBtn} ${!theme ? styles.themeActive : ''}`}
-            onClick={() => setTheme('')}
-          >
-            <div className={styles.themeAuto}>Auto</div>
-          </button>
-          {THEME_ENTRIES.map(([id, t]) => (
-            <button
-              key={id}
-              type="button"
-              className={`${styles.themeBtn} ${theme === id ? styles.themeActive : ''}`}
-              onClick={() => setTheme(id)}
-              title={t.name}
-            >
-              <div
-                className={styles.themeSwatch}
-                style={{ background: `linear-gradient(135deg, ${t.primary}, ${t.secondary})` }}
-              />
-              <span className={styles.themeLabel}>{t.name}</span>
+      {/* Expanded settings */}
+      {expanded && (
+        <div className={styles.cardBody}>
+          {/* Row 1: Name + Avatar */}
+          <div className={styles.row}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Name</span>
+              <input className="input-field" value={name} onChange={(e) => markDirty(setName)(e.target.value)} required />
+            </label>
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Avatar</span>
+            <div className={styles.avatarGrid}>
+              {AVATARS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  className={`${styles.avatarBtn} ${avatar === a ? styles.avatarActive : ''}`}
+                  onClick={() => markDirty(setAvatar)(a)}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: Content controls */}
+          <div className={styles.row}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Library</span>
+              <select className="input-field" value={allowedLibraryId} onChange={(e) => markDirty(setAllowedLibraryId)(e.target.value)}>
+                <option value="">All Libraries</option>
+                {folders.map((f) => (
+                  <option key={f.ItemId} value={f.ItemId}>{f.Name}</option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Max Rating</span>
+              <select className="input-field" value={maxRating} onChange={(e) => markDirty(setMaxRating)(e.target.value)}>
+                <option value="">No Limit</option>
+                {getAllRatings().map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {/* Row 3: Time controls */}
+          <div className={styles.row}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Session Limit</span>
+              <select className="input-field" value={sessionLimit} onChange={(e) => markDirty(setSessionLimit)(e.target.value)}>
+                {SESSION_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Font</span>
+              <select className="input-field" value={font} onChange={(e) => markDirty(setFont)(e.target.value)}>
+                {FONTS.map((f) => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {/* Bedtime */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Bedtime</span>
+            <div className={styles.bedtimeRow}>
+              <input className="input-field" type="time" value={bedtimeStart} onChange={(e) => markDirty(setBedtimeStart)(e.target.value)} />
+              <span className={styles.bedtimeTo}>to</span>
+              <input className="input-field" type="time" value={bedtimeEnd} onChange={(e) => markDirty(setBedtimeEnd)(e.target.value)} />
+              {(bedtimeStart || bedtimeEnd) && (
+                <button type="button" className={styles.clearBtn} onClick={() => { markDirty(setBedtimeStart)(''); setBedtimeEnd(''); }}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Theme */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Theme ({themeName})</span>
+            <div className={styles.themeGrid}>
+              <button
+                type="button"
+                className={`${styles.themeBtn} ${!theme ? styles.themeActive : ''}`}
+                onClick={() => markDirty(setTheme)('')}
+              >
+                <div className={styles.themeAuto}>Auto</div>
+              </button>
+              {THEME_ENTRIES.map(([id, t]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`${styles.themeBtn} ${theme === id ? styles.themeActive : ''}`}
+                  onClick={() => markDirty(setTheme)(id)}
+                  title={t.name}
+                >
+                  <div className={styles.themeSwatch} style={{ background: `linear-gradient(135deg, ${t.primary}, ${t.secondary})` }} />
+                  <span className={styles.themeLabel}>{t.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.cardActions}>
+            {dirty && (
+              <button className="btn-primary" onClick={handleSave}>Save Changes</button>
+            )}
+            {showHistory && (
+              <button className={styles.actionBtn} onClick={() => setShowHistoryPanel(!showHistoryPanel)}>
+                {showHistoryPanel ? 'Hide History' : 'Watch History'}
+              </button>
+            )}
+            <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => onDelete(profile.id)}>
+              Delete Profile
             </button>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <label className={styles.label}>
-        Font
-        <select className="input-field" value={font} onChange={(e) => setFont(e.target.value)}>
-          {FONTS.map((f) => (
-            <option key={f.id} value={f.id}>{f.name}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className={styles.label}>
-        Allowed Library
-        <select className="input-field" value={allowedLibraryId} onChange={(e) => setAllowedLibraryId(e.target.value)}>
-          <option value="">All Libraries</option>
-          {folders.map((f) => (
-            <option key={f.ItemId} value={f.ItemId}>{f.Name}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className={styles.label}>
-        Max Age Rating
-        <select className="input-field" value={maxRating} onChange={(e) => setMaxRating(e.target.value)}>
-          <option value="">No Limit</option>
-          {getAllRatings().map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className={styles.label}>
-        Session Time Limit
-        <select className="input-field" value={sessionLimit} onChange={(e) => setSessionLimit(e.target.value)}>
-          {SESSION_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      </label>
-
-      <div className={styles.label}>
-        Bedtime (unavailable from / to)
-        <div className={styles.bedtimeRow}>
-          <input
-            className="input-field"
-            type="time"
-            value={bedtimeStart}
-            onChange={(e) => setBedtimeStart(e.target.value)}
-          />
-          <span className={styles.bedtimeTo}>to</span>
-          <input
-            className="input-field"
-            type="time"
-            value={bedtimeEnd}
-            onChange={(e) => setBedtimeEnd(e.target.value)}
-          />
-          {(bedtimeStart || bedtimeEnd) && (
-            <button
-              type="button"
-              className={styles.clearBtn}
-              onClick={() => { setBedtimeStart(''); setBedtimeEnd(''); }}
-            >
-              Clear
-            </button>
+          {showHistoryPanel && (
+            <WatchHistoryPanel profile={profile} />
           )}
         </div>
-      </div>
-
-      <div className={styles.formActions}>
-        <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn-primary">Save</button>
-      </div>
-    </form>
+      )}
+    </div>
   );
 }
 
@@ -182,30 +219,53 @@ function WatchHistoryPanel({ profile }) {
   );
 }
 
+function AddProfileForm({ folders, onSave, onCancel }) {
+  const [name, setName] = useState('');
+  const [avatar, setAvatar] = useState('😊');
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    onSave({ name, avatar, allowedLibraryId: '', maxRating: '', theme: '', font: 'nunito', sessionLimit: 0, bedtimeStart: '', bedtimeEnd: '' });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className={styles.addForm}>
+      <label className={styles.field}>
+        <span className={styles.fieldLabel}>Name</span>
+        <input className="input-field" value={name} onChange={(e) => setName(e.target.value)} required />
+      </label>
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Avatar</span>
+        <div className={styles.avatarGrid}>
+          {AVATARS.map((a) => (
+            <button key={a} type="button" className={`${styles.avatarBtn} ${avatar === a ? styles.avatarActive : ''}`} onClick={() => setAvatar(a)}>
+              {a}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.formActions}>
+        <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn-primary">Create</button>
+      </div>
+      <p className={styles.muted}>You can configure all other settings after creating the profile.</p>
+    </form>
+  );
+}
+
 export default function ParentDashboard() {
   const navigate = useNavigate();
   const { parentPin, updateParentPin, parentSettings, updateParentSettings } = useApp();
   const { profiles, addProfile, editProfile, deleteProfile } = useProfiles();
   const { folders } = useVirtualFolders();
 
-  const [editingProfile, setEditingProfile] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [showHistory, setShowHistory] = useState(null);
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
 
   function handleAddProfile(data) {
     addProfile(data);
     setShowAdd(false);
-  }
-
-  function handleEditProfile(data) {
-    editProfile(editingProfile.id, data);
-    setEditingProfile(null);
-  }
-
-  function handleDeleteProfile(id) {
-    deleteProfile(id);
   }
 
   function handleChangePin(e) {
@@ -238,29 +298,14 @@ export default function ParentDashboard() {
 
         <div className={styles.profileGrid}>
           {profiles.map((p) => (
-            <div key={p.id} className={styles.profileItem}>
-              <span className={styles.profileEmoji}>{p.avatar || '😊'}</span>
-              <div className={styles.profileInfo}>
-                <div className={styles.profileName}>{p.name}</div>
-                <div className={styles.profileMeta}>
-                  {p.maxRating ? `Max: ${p.maxRating}` : 'No rating limit'}
-                  {p.sessionLimit > 0 && ` | ${p.sessionLimit}min limit`}
-                  {p.bedtimeStart && p.bedtimeEnd && ` | Bedtime ${p.bedtimeStart}-${p.bedtimeEnd}`}
-                </div>
-              </div>
-              <div className={styles.profileActions}>
-                <button className={styles.actionBtn} onClick={() => setEditingProfile(p)}>Edit</button>
-                {parentSettings.showWatchHistory && (
-                  <button className={styles.actionBtn} onClick={() => setShowHistory(p)}>History</button>
-                )}
-                <button
-                  className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                  onClick={() => handleDeleteProfile(p.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
+            <ProfileCard
+              key={p.id}
+              profile={p}
+              folders={folders}
+              onSave={(id, data) => editProfile(id, data)}
+              onDelete={deleteProfile}
+              showHistory={parentSettings.showWatchHistory}
+            />
           ))}
           {profiles.length === 0 && (
             <p className={styles.muted}>No profiles. Create one to get started!</p>
@@ -317,27 +362,10 @@ export default function ParentDashboard() {
         </form>
       </section>
 
-      {/* Modals */}
+      {/* Add Profile Modal */}
       {showAdd && (
         <Modal title="Add Profile" onClose={() => setShowAdd(false)}>
-          <ProfileForm folders={folders} onSave={handleAddProfile} onCancel={() => setShowAdd(false)} />
-        </Modal>
-      )}
-
-      {editingProfile && (
-        <Modal title={`Edit ${editingProfile.name}`} onClose={() => setEditingProfile(null)}>
-          <ProfileForm
-            initial={editingProfile}
-            folders={folders}
-            onSave={handleEditProfile}
-            onCancel={() => setEditingProfile(null)}
-          />
-        </Modal>
-      )}
-
-      {showHistory && (
-        <Modal title={`${showHistory.name}'s Watch History`} onClose={() => setShowHistory(null)}>
-          <WatchHistoryPanel profile={showHistory} />
+          <AddProfileForm folders={folders} onSave={handleAddProfile} onCancel={() => setShowAdd(false)} />
         </Modal>
       )}
     </div>
