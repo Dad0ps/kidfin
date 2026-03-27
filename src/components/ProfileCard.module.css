@@ -40,3 +40,9 @@
   font-weight: 800;
   color: var(--text-primary);
 }
+
+.themeName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}

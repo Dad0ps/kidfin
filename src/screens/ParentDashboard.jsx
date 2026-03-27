@@ -4,10 +4,13 @@ import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
 import { useVirtualFolders, useWatchHistory } from '../hooks/useJellyfin';
 import { getAllRatings } from '../utils/ratings';
+import { THEMES } from '../utils/themes';
+import { FONTS } from '../utils/fonts';
 import Modal from '../components/Modal';
 import styles from './ParentDashboard.module.css';
 
 const AVATARS = ['😊', '🦊', '🐻', '🦁', '🐰', '🐸', '🦄', '🐼', '🐶', '🐱', '🦋', '🌟', '🚀', '🎨'];
+const THEME_ENTRIES = Object.entries(THEMES);
 
 const SESSION_OPTIONS = [
   { value: 0, label: 'No Limit' },
@@ -23,6 +26,8 @@ function ProfileForm({ initial, folders, onSave, onCancel }) {
   const [avatar, setAvatar] = useState(initial?.avatar || '😊');
   const [allowedLibraryId, setAllowedLibraryId] = useState(initial?.allowedLibraryId || '');
   const [maxRating, setMaxRating] = useState(initial?.maxRating || '');
+  const [theme, setTheme] = useState(initial?.theme || '');
+  const [font, setFont] = useState(initial?.font || 'nunito');
   const [sessionLimit, setSessionLimit] = useState(initial?.sessionLimit || 0);
   const [bedtimeStart, setBedtimeStart] = useState(initial?.bedtimeStart || '');
   const [bedtimeEnd, setBedtimeEnd] = useState(initial?.bedtimeEnd || '');
@@ -30,7 +35,7 @@ function ProfileForm({ initial, folders, onSave, onCancel }) {
   function handleSubmit(e) {
     e.preventDefault();
     onSave({
-      name, avatar, allowedLibraryId, maxRating,
+      name, avatar, allowedLibraryId, maxRating, theme, font,
       sessionLimit: Number(sessionLimit),
       bedtimeStart, bedtimeEnd,
     });
@@ -58,6 +63,43 @@ function ProfileForm({ initial, folders, onSave, onCancel }) {
           ))}
         </div>
       </div>
+
+      <div className={styles.label}>
+        Theme {theme ? `(${THEMES[theme]?.name})` : '(auto from avatar)'}
+        <div className={styles.themeGrid}>
+          <button
+            type="button"
+            className={`${styles.themeBtn} ${!theme ? styles.themeActive : ''}`}
+            onClick={() => setTheme('')}
+          >
+            <div className={styles.themeAuto}>Auto</div>
+          </button>
+          {THEME_ENTRIES.map(([id, t]) => (
+            <button
+              key={id}
+              type="button"
+              className={`${styles.themeBtn} ${theme === id ? styles.themeActive : ''}`}
+              onClick={() => setTheme(id)}
+              title={t.name}
+            >
+              <div
+                className={styles.themeSwatch}
+                style={{ background: `linear-gradient(135deg, ${t.primary}, ${t.secondary})` }}
+              />
+              <span className={styles.themeLabel}>{t.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className={styles.label}>
+        Font
+        <select className="input-field" value={font} onChange={(e) => setFont(e.target.value)}>
+          {FONTS.map((f) => (
+            <option key={f.id} value={f.id}>{f.name}</option>
+          ))}
+        </select>
+      </label>
 
       <label className={styles.label}>
         Allowed Library

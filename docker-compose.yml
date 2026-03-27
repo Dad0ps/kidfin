@@ -2,7 +2,7 @@ services:
   kidfin:
     build: .
     ports:
-      - "3000:80"
+      - "${KIDFIN_PORT:-3000}:80"
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

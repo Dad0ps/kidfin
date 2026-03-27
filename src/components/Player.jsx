@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { getStreamUrl, getDirectStreamUrl } from '../api/jellyfin';
+import { getStreamUrl, getDirectStreamUrl, getItemById, getSubtitleUrl } from '../api/jellyfin';
 import { reportPlaybackStart, reportPlaybackProgress, reportPlaybackStopped } from '../api/jellyfin';
 import { useApp } from '../context/AppContext';
 import styles from './Player.module.css';
@@ -19,8 +19,27 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState(null);
   const [triedFallback, setTriedFallback] = useState(false);
+  const [subtitles, setSubtitles] = useState([]);
+  const [activeSubtitle, setActiveSubtitle] = useState(-1);
+  const [showCCMenu, setShowCCMenu] = useState(false);
 
   const streamUrl = getStreamUrl(itemId);
+
+  // Fetch subtitle tracks
+  useEffect(() => {
+    getItemById(itemId).then((item) => {
+      if (!item?.MediaStreams) return;
+      const subs = item.MediaStreams
+        .filter((s) => s.Type === 'Subtitle')
+        .map((s) => ({
+          index: s.Index,
+          language: s.DisplayTitle || s.Language || `Track ${s.Index}`,
+          codec: s.Codec,
+          isTextBased: ['srt', 'vtt', 'ass', 'ssa', 'subrip', 'webvtt'].includes((s.Codec || '').toLowerCase()),
+        }));
+      setSubtitles(subs);
+    }).catch(() => {});
+  }, [itemId]);
 
   const stopReporting = useCallback(() => {
     if (progressInterval.current) {
@@ -55,7 +74,6 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
         }, 10000);
       }
     }).catch(() => {
-      // Autoplay blocked — keep the play button visible
       setWaiting(true);
       setPlaying(false);
     });
@@ -67,7 +85,6 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
     let noSleepVideo = null;
 
     async function keepAwake() {
-      // Try Wake Lock API first (requires HTTPS)
       if ('wakeLock' in navigator) {
         try {
           wakeLock = await navigator.wakeLock.request('screen');
@@ -75,7 +92,6 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
         } catch {}
       }
 
-      // Fallback: silent video loop tricks iOS/Safari into staying awake
       noSleepVideo = document.createElement('video');
       noSleepVideo.setAttribute('playsinline', '');
       noSleepVideo.setAttribute('webkit-playsinline', '');
@@ -88,7 +104,6 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
       noSleepVideo.style.width = '1px';
       noSleepVideo.style.height = '1px';
       noSleepVideo.style.opacity = '0.01';
-      // Minimal valid mp4 (tiny silent video)
       noSleepVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhtZGF0AAAA1m1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2YzU4Ljk3';
       document.body.appendChild(noSleepVideo);
       noSleepVideo.play().catch(() => {});
@@ -112,7 +127,6 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
   }, []);
 
   useEffect(() => {
-    // Try autoplay — if it works, great. If blocked (Safari/iOS), the play overlay stays.
     startPlayback();
 
     return () => {
@@ -123,6 +137,33 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
       }
     };
   }, [itemId, stopReporting, startPlayback]);
+
+  // Apply subtitle track
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Remove existing tracks
+    const existing = video.querySelectorAll('track');
+    existing.forEach((t) => t.remove());
+
+    if (activeSubtitle >= 0) {
+      const track = document.createElement('track');
+      track.kind = 'subtitles';
+      track.src = getSubtitleUrl(itemId, activeSubtitle);
+      track.default = true;
+      video.appendChild(track);
+      // Activate the track
+      if (video.textTracks.length > 0) {
+        video.textTracks[0].mode = 'showing';
+      }
+    }
+  }, [activeSubtitle, itemId]);
+
+  function handleSubtitleSelect(index) {
+    setActiveSubtitle(index);
+    setShowCCMenu(false);
+  }
 
   function handleTapToPlay() {
     startPlayback();
@@ -203,8 +244,11 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
     return `${m}:${sec.toString().padStart(2, '0')}`;
   }
 
+  const textSubtitles = subtitles.filter((s) => s.isTextBased);
+  const hasSubtitles = textSubtitles.length > 0;
+
   return (
-    <div className={styles.player}>
+    <div className={styles.player} onClick={() => showCCMenu && setShowCCMenu(false)}>
       <video
         ref={videoRef}
         src={streamUrl}
@@ -216,6 +260,7 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
         onPlaying={handlePlaying}
         playsInline
         webkit-playsinline=""
+        crossOrigin="anonymous"
       />
       {waiting && !error && (
         <button className={styles.tapToPlay} onClick={handleTapToPlay}>
@@ -248,6 +293,35 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
               className={styles.scrubBar}
             />
             <span className={styles.time}>{formatTime(duration)}</span>
+          </div>
+        )}
+        {hasSubtitles && (
+          <div className={styles.ccWrap}>
+            <button
+              className={`${styles.ccBtn} ${activeSubtitle >= 0 ? styles.ccActive : ''}`}
+              onClick={(e) => { e.stopPropagation(); setShowCCMenu(!showCCMenu); }}
+            >
+              CC
+            </button>
+            {showCCMenu && (
+              <div className={styles.ccMenu} onClick={(e) => e.stopPropagation()}>
+                <button
+                  className={`${styles.ccOption} ${activeSubtitle === -1 ? styles.ccOptionActive : ''}`}
+                  onClick={() => handleSubtitleSelect(-1)}
+                >
+                  Off
+                </button>
+                {textSubtitles.map((sub) => (
+                  <button
+                    key={sub.index}
+                    className={`${styles.ccOption} ${activeSubtitle === sub.index ? styles.ccOptionActive : ''}`}
+                    onClick={() => handleSubtitleSelect(sub.index)}
+                  >
+                    {sub.language}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <div className={styles.volumeWrap}>

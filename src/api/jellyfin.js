@@ -59,7 +59,13 @@ export async function getResumeItems(params = {}) {
 
 export async function getItemById(itemId) {
   const userId = getAdminUserId();
-  return apiFetch(`/Users/${userId}/Items/${itemId}`);
+  return apiFetch(`/Users/${userId}/Items/${itemId}?Fields=MediaStreams,Overview,Genres,OfficialRating`);
+}
+
+export function getSubtitleUrl(itemId, subtitleIndex) {
+  const serverUrl = getServerUrl().replace(/\/+$/, '');
+  const token = getAccessToken();
+  return `${serverUrl}/Videos/${itemId}/${itemId}/Subtitles/${subtitleIndex}/Stream.vtt?api_key=${token}`;
 }
 
 export async function getEpisodes(seriesId, params = {}) {
