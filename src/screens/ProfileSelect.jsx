@@ -46,6 +46,7 @@ export default function ProfileSelect() {
   }
 
   function handleProfileClick(profile) {
+    setShowPin(false);
     if (isInBedtime(profile)) {
       setBedtimeMessage(profile.name);
       setTimeout(() => setBedtimeMessage(null), 3000);
