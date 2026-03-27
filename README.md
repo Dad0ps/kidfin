@@ -37,7 +37,7 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 ## Quick Start (Docker)
 
 ```bash
-git clone <repo-url> KidFin
+git clone https://github.com/Dad0ps/kidfin.git KidFin
 cd KidFin
 docker compose up -d --build
 ```
