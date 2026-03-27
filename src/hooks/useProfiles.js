@@ -5,8 +5,9 @@ export function useProfiles() {
   const { childProfiles, updateChildProfiles } = useApp();
 
   const addProfile = useCallback((profile) => {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
     const newProfile = {
-      id: crypto.randomUUID(),
+      id,
       ...profile,
     };
     updateChildProfiles([...childProfiles, newProfile]);
