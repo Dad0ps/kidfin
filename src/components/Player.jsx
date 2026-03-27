@@ -138,7 +138,7 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
     };
   }, [itemId, stopReporting, startPlayback]);
 
-  // Apply subtitle track
+  // Apply subtitle track — fetch, clean ASS/SSA tags, and load as blob
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -147,17 +147,33 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
     const existing = video.querySelectorAll('track');
     existing.forEach((t) => t.remove());
 
+    let blobUrl = null;
+
     if (activeSubtitle >= 0) {
-      const track = document.createElement('track');
-      track.kind = 'subtitles';
-      track.src = getSubtitleUrl(itemId, activeSubtitle);
-      track.default = true;
-      video.appendChild(track);
-      // Activate the track
-      if (video.textTracks.length > 0) {
-        video.textTracks[0].mode = 'showing';
-      }
+      const url = getSubtitleUrl(itemId, activeSubtitle);
+      fetch(url)
+        .then((res) => res.text())
+        .then((vtt) => {
+          // Strip ASS/SSA override tags like {\i1}, {\b0}, {\an8}, {\pos(x,y)}, etc.
+          const cleaned = vtt.replace(/\{\\[^}]*\}/g, '');
+          const blob = new Blob([cleaned], { type: 'text/vtt' });
+          blobUrl = URL.createObjectURL(blob);
+
+          const track = document.createElement('track');
+          track.kind = 'subtitles';
+          track.src = blobUrl;
+          track.default = true;
+          video.appendChild(track);
+          if (video.textTracks.length > 0) {
+            video.textTracks[0].mode = 'showing';
+          }
+        })
+        .catch(() => {});
     }
+
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
   }, [activeSubtitle, itemId]);
 
   function handleSubtitleSelect(index) {
