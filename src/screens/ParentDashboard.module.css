@@ -187,6 +187,38 @@
   background: rgba(92, 224, 216, 0.15);
 }
 
+.bedtimeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bedtimeRow input {
+  flex: 1;
+  min-width: 120px;
+}
+
+.bedtimeTo {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.clearBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  transition: color 0.2s;
+}
+
+.clearBtn:hover {
+  color: var(--accent-coral);
+}
+
 .formActions {
   display: flex;
   gap: 12px;

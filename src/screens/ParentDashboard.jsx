@@ -9,15 +9,31 @@ import styles from './ParentDashboard.module.css';
 
 const AVATARS = ['😊', '🦊', '🐻', '🦁', '🐰', '🐸', '🦄', '🐼', '🐶', '🐱', '🦋', '🌟', '🚀', '🎨'];
 
+const SESSION_OPTIONS = [
+  { value: 0, label: 'No Limit' },
+  { value: 30, label: '30 minutes' },
+  { value: 60, label: '1 hour' },
+  { value: 90, label: '1.5 hours' },
+  { value: 120, label: '2 hours' },
+  { value: 180, label: '3 hours' },
+];
+
 function ProfileForm({ initial, folders, onSave, onCancel }) {
   const [name, setName] = useState(initial?.name || '');
   const [avatar, setAvatar] = useState(initial?.avatar || '😊');
   const [allowedLibraryId, setAllowedLibraryId] = useState(initial?.allowedLibraryId || '');
   const [maxRating, setMaxRating] = useState(initial?.maxRating || '');
+  const [sessionLimit, setSessionLimit] = useState(initial?.sessionLimit || 0);
+  const [bedtimeStart, setBedtimeStart] = useState(initial?.bedtimeStart || '');
+  const [bedtimeEnd, setBedtimeEnd] = useState(initial?.bedtimeEnd || '');
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave({ name, avatar, allowedLibraryId, maxRating });
+    onSave({
+      name, avatar, allowedLibraryId, maxRating,
+      sessionLimit: Number(sessionLimit),
+      bedtimeStart, bedtimeEnd,
+    });
   }
 
   return (
@@ -62,6 +78,43 @@ function ProfileForm({ initial, folders, onSave, onCancel }) {
           ))}
         </select>
       </label>
+
+      <label className={styles.label}>
+        Session Time Limit
+        <select className="input-field" value={sessionLimit} onChange={(e) => setSessionLimit(e.target.value)}>
+          {SESSION_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </label>
+
+      <div className={styles.label}>
+        Bedtime (unavailable from / to)
+        <div className={styles.bedtimeRow}>
+          <input
+            className="input-field"
+            type="time"
+            value={bedtimeStart}
+            onChange={(e) => setBedtimeStart(e.target.value)}
+          />
+          <span className={styles.bedtimeTo}>to</span>
+          <input
+            className="input-field"
+            type="time"
+            value={bedtimeEnd}
+            onChange={(e) => setBedtimeEnd(e.target.value)}
+          />
+          {(bedtimeStart || bedtimeEnd) && (
+            <button
+              type="button"
+              className={styles.clearBtn}
+              onClick={() => { setBedtimeStart(''); setBedtimeEnd(''); }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className={styles.formActions}>
         <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
@@ -149,6 +202,8 @@ export default function ParentDashboard() {
                 <div className={styles.profileName}>{p.name}</div>
                 <div className={styles.profileMeta}>
                   {p.maxRating ? `Max: ${p.maxRating}` : 'No rating limit'}
+                  {p.sessionLimit > 0 && ` | ${p.sessionLimit}min limit`}
+                  {p.bedtimeStart && p.bedtimeEnd && ` | Bedtime ${p.bedtimeStart}-${p.bedtimeEnd}`}
                 </div>
               </div>
               <div className={styles.profileActions}>

@@ -5,12 +5,36 @@ import ProfileCard from '../components/ProfileCard';
 import PinPad from '../components/PinPad';
 import styles from './ProfileSelect.module.css';
 
+function isInBedtime(profile) {
+  const { bedtimeStart, bedtimeEnd } = profile;
+  if (!bedtimeStart || !bedtimeEnd) return false;
+
+  const now = new Date();
+  const [startH, startM] = bedtimeStart.split(':').map(Number);
+  const [endH, endM] = bedtimeEnd.split(':').map(Number);
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = startH * 60 + startM;
+  const endMinutes = endH * 60 + endM;
+
+  if (startMinutes > endMinutes) {
+    return nowMinutes >= startMinutes || nowMinutes < endMinutes;
+  }
+  return nowMinutes >= startMinutes && nowMinutes < endMinutes;
+}
+
 export default function ProfileSelect() {
   const navigate = useNavigate();
   const { childProfiles, setCurrentProfile, parentPin } = useApp();
   const [showPin, setShowPin] = useState(false);
+  const [bedtimeMessage, setBedtimeMessage] = useState(null);
 
   function handleProfileClick(profile) {
+    if (isInBedtime(profile)) {
+      setBedtimeMessage(profile.name);
+      setTimeout(() => setBedtimeMessage(null), 3000);
+      return;
+    }
     setCurrentProfile(profile);
     navigate('/home');
   }
@@ -42,8 +66,14 @@ export default function ProfileSelect() {
         ))}
       </div>
 
+      {bedtimeMessage && (
+        <div className={styles.bedtimeNotice}>
+          It's bedtime for {bedtimeMessage}!
+        </div>
+      )}
+
       <button className={styles.parentBtn} onClick={() => setShowPin(true)}>
-        🔒 Parent
+        Parent
       </button>
 
       {showPin && (

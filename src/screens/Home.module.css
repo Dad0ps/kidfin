@@ -31,6 +31,15 @@
   color: var(--text-primary);
 }
 
+.timer {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-orange);
+  background: rgba(255, 138, 92, 0.15);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
 .backBtn {
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -72,5 +81,37 @@
   color: var(--text-muted);
   font-size: 20px;
   text-align: center;
-  grid-column: 1 / -1;
+}
+
+.lockScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  text-align: center;
+  gap: 20px;
+}
+
+.lockIcon {
+  font-size: 96px;
+  animation: lockBounce 2s ease-in-out infinite;
+}
+
+@keyframes lockBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.lockTitle {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.lockText {
+  font-size: 20px;
+  color: var(--text-secondary);
+  max-width: 400px;
 }
