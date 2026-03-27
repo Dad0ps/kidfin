@@ -361,14 +361,6 @@ export default function ParentDashboard() {
             />
             <span className={styles.toggleLabel}>Autoplay next episode</span>
           </label>
-          <label className={styles.toggle}>
-            <input
-              type="checkbox"
-              checked={parentSettings.showWatchHistory}
-              onChange={(e) => updateParentSettings({ ...parentSettings, showWatchHistory: e.target.checked })}
-            />
-            <span className={styles.toggleLabel}>Show watch history per profile</span>
-          </label>
         </div>
       </section>
 

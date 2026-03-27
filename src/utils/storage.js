@@ -56,7 +56,6 @@ export function getParentSettings() {
     return JSON.parse(localStorage.getItem(KEYS.PARENT_SETTINGS)) || {
       allowScrubbing: false,
       autoplayNext: true,
-      showWatchHistory: false,
     };
   } catch {
     return { allowScrubbing: false, autoplayNext: true };
