@@ -29,6 +29,7 @@ export default function ProfileSelect() {
   const navigate = useNavigate();
   const { childProfiles, setCurrentProfile, parentPin, setParentUnlocked } = useApp();
   const [showPin, setShowPin] = useState(false);
+  const [profilePinTarget, setProfilePinTarget] = useState(null);
   const [bedtimeMessage, setBedtimeMessage] = useState(null);
 
   // Reset to defaults on profile select screen
@@ -36,17 +37,34 @@ export default function ProfileSelect() {
   clearFont();
   setParentUnlocked(false);
 
+  function enterProfile(profile) {
+    setCurrentProfile(profile);
+    applyTheme(getThemeForProfile(profile));
+    if (profile.font) applyFont(profile.font);
+    if (profile.fontSize) applyFontSize(profile.fontSize);
+    navigate('/home');
+  }
+
   function handleProfileClick(profile) {
     if (isInBedtime(profile)) {
       setBedtimeMessage(profile.name);
       setTimeout(() => setBedtimeMessage(null), 3000);
       return;
     }
-    setCurrentProfile(profile);
-    applyTheme(getThemeForProfile(profile));
-    if (profile.font) applyFont(profile.font);
-    if (profile.fontSize) applyFontSize(profile.fontSize);
-    navigate('/home');
+    if (profile.profilePin) {
+      setProfilePinTarget(profile);
+    } else {
+      enterProfile(profile);
+    }
+  }
+
+  function handleProfilePinSubmit(entered) {
+    if (entered === profilePinTarget.profilePin) {
+      enterProfile(profilePinTarget);
+      setProfilePinTarget(null);
+      return true;
+    }
+    return false;
   }
 
   function handlePinSubmit(entered) {
@@ -88,7 +106,21 @@ export default function ProfileSelect() {
       </button>
 
       {showPin && (
-        <PinPad onSubmit={handlePinSubmit} onCancel={() => setShowPin(false)} />
+        <PinPad
+          title="Enter Parent PIN"
+          digits={4}
+          onSubmit={handlePinSubmit}
+          onCancel={() => setShowPin(false)}
+        />
+      )}
+
+      {profilePinTarget && (
+        <PinPad
+          title={`Enter ${profilePinTarget.name}'s PIN`}
+          digits={2}
+          onSubmit={handleProfilePinSubmit}
+          onCancel={() => setProfilePinTarget(null)}
+        />
       )}
     </div>
   );
