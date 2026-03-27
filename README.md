@@ -19,7 +19,9 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 - Playback reporting back to Jellyfin (resume, progress, stopped)
 
 **Parental Controls**
-- PIN-protected parent dashboard (rate-limited: 5 attempts, 30-second lockout)
+- PIN-protected parent dashboard (4-digit, rate-limited: 5 attempts, 30-second lockout)
+- Optional per-profile 2-digit PIN to prevent siblings from accessing each other's profiles
+- New profiles default to G rating -- parents can raise it per profile
 - Child profiles with per-profile library restrictions and age rating filters
 - Per-profile session time limits (30min, 1hr, 1.5hr, 2hr, 3hr)
 - Per-profile bedtime cutoff (from/to time, supports overnight spans)
@@ -33,6 +35,7 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 - Atkinson Hyperlegible font option -- designed by the Braille Institute for maximum character distinction
 - OpenDyslexic font option -- designed to reduce letter swapping for readers with dyslexia
 - Font selection is per-profile and configurable by the parent
+- Per-profile text size slider (16px to 28px) with live preview for visually impaired users
 - Minimum 16px text throughout the app, large touch targets, high contrast on dark background
 - All fonts self-hosted (SIL Open Font License), no external dependencies
 
@@ -199,11 +202,13 @@ Profiles are displayed as expandable cards -- tap to expand and edit settings in
 
 Per profile:
 - Name, avatar, and color theme
+- Optional 2-digit profile PIN (prevents siblings from accessing each other's profiles)
 - Allowed Jellyfin library
-- Max age rating (G through TV-MA)
+- Max age rating (defaults to G, configurable up to TV-MA)
 - Session time limit (30min to 3hr, or no limit)
 - Bedtime cutoff (from/to time, supports overnight spans like 8PM-7AM)
 - Font (Nunito, Atkinson Hyperlegible, OpenDyslexic)
+- Text size (16px to 28px slider)
 
 Global settings:
 - Allow/disallow scrubbing in the video player

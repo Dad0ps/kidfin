@@ -34,6 +34,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
   const [sessionLimit, setSessionLimit] = useState(profile.sessionLimit || 0);
   const [bedtimeStart, setBedtimeStart] = useState(profile.bedtimeStart || '');
   const [bedtimeEnd, setBedtimeEnd] = useState(profile.bedtimeEnd || '');
+  const [profilePin, setProfilePin] = useState(profile.profilePin || '');
   const nameTimer = useRef(null);
 
   function save(overrides = {}) {
@@ -41,7 +42,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
       name, avatar, allowedLibraryId, maxRating, theme, font,
       fontSize: Number(fontSize),
       sessionLimit: Number(sessionLimit),
-      bedtimeStart, bedtimeEnd,
+      bedtimeStart, bedtimeEnd, profilePin,
       ...overrides,
     };
     onSave(profile.id, data);
@@ -111,6 +112,7 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
             {sessionLimit > 0 && ` · ${sessionLimit}min`}
             {bedtimeStart && bedtimeEnd && ` · ${bedtimeStart}-${bedtimeEnd}`}
             {` · ${libraryName}`}
+            {profilePin && ' · PIN set'}
           </div>
         </div>
         <span className={styles.cardChevron}>{expanded ? '▲' : '▼'}</span>
@@ -119,11 +121,27 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
       {/* Expanded settings */}
       {expanded && (
         <div className={styles.cardBody}>
-          {/* Row 1: Name + Avatar */}
+          {/* Row 1: Name + Profile PIN */}
           <div className={styles.row}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Name</span>
               <input className="input-field" value={name} onChange={(e) => handleNameChange(e.target.value)} required />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Profile PIN (2 digits, optional)</span>
+              <input
+                className="input-field"
+                type="password"
+                maxLength={2}
+                placeholder="No PIN"
+                value={profilePin}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setProfilePin(val);
+                  save({ profilePin: val });
+                }}
+                style={{ maxWidth: 120 }}
+              />
             </label>
           </div>
 
@@ -261,7 +279,7 @@ function AddProfileForm({ folders, onSave, onCancel }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave({ name, avatar, allowedLibraryId: '', maxRating: '', theme: '', font: 'nunito', sessionLimit: 0, bedtimeStart: '', bedtimeEnd: '' });
+    onSave({ name, avatar, allowedLibraryId: '', maxRating: 'G', theme: '', font: 'nunito', fontSize: DEFAULT_FONT_SIZE, sessionLimit: 0, bedtimeStart: '', bedtimeEnd: '', profilePin: '' });
   }
 
   return (

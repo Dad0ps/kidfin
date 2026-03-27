@@ -4,7 +4,7 @@ import styles from './PinPad.module.css';
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 30;
 
-export default function PinPad({ onSubmit, onCancel, title = 'Enter Parent PIN' }) {
+export default function PinPad({ onSubmit, onCancel, title = 'Enter PIN', digits = 4 }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [locked, setLocked] = useState(false);
@@ -30,11 +30,11 @@ export default function PinPad({ onSubmit, onCancel, title = 'Enter Parent PIN' 
   }
 
   function handleDigit(d) {
-    if (locked || pin.length >= 4) return;
+    if (locked || pin.length >= digits) return;
     const next = pin + d;
     setPin(next);
     setError('');
-    if (next.length === 4) {
+    if (next.length === digits) {
       const ok = onSubmit(next);
       if (ok === false) {
         attempts.current += 1;
@@ -61,7 +61,7 @@ export default function PinPad({ onSubmit, onCancel, title = 'Enter Parent PIN' 
       <div className={styles.pad} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.title}>{title}</h2>
         <div className={styles.dots}>
-          {[0, 1, 2, 3].map((i) => (
+          {Array.from({ length: digits }).map((_, i) => (
             <div key={i} className={`${styles.dot} ${i < pin.length ? styles.filled : ''}`} />
           ))}
         </div>
