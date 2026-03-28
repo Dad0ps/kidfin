@@ -33,8 +33,12 @@ export default function Detail() {
   }, [currentProfile]);
 
   if (!currentProfile) {
-    navigate('/profiles');
-    return null;
+    return (
+      <div className={styles.loading}>
+        <p style={{ color: 'white', fontSize: 20 }}>No profile selected</p>
+        <button className="btn-primary" onClick={() => navigate('/profiles')}>Go Back</button>
+      </div>
+    );
   }
 
   if (isLocked) {
@@ -62,6 +66,7 @@ export default function Detail() {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner} />
+        <p style={{ color: 'var(--text-secondary)', fontSize: 18 }}>Loading...</p>
       </div>
     );
   }
