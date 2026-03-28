@@ -2,7 +2,7 @@
 
 # KidFin
 
-**Version 1.0**
+**Version 1.1**
 
 A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple, colorful interface where children can browse and watch content from a family Jellyfin instance without navigating the full Jellyfin UI. No backend required -- the browser talks directly to your Jellyfin server.
 

@@ -493,7 +493,7 @@ export default function ParentDashboard() {
             Clear All Profiles
           </button>
         )}
-        <p className={styles.buildInfo}>Build: {__BUILD_TIME__}</p>
+        <p className={styles.buildInfo}>Build: {__BUILD_TIME__} · Version {__APP_VERSION__}</p>
       </section>
 
       {/* Add Profile Modal */}
