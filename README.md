@@ -12,10 +12,11 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 - Connects to any standard Jellyfin server (v10.8+) via REST API
 - Single-pane poster grid -- tap to play, no menus to navigate
 - Movies play instantly on tap, series show an episode list with thumbnails
+- Collections (BoxSets) open a detail view listing all movies in the collection
 - Full-screen HTML5 video player with play/pause, volume, and optional scrubbing
 - HLS streaming for Safari/iOS, MP4 transcoding for Chrome/Firefox with direct stream fallback
 - Closed captioning support (text-based subtitles with ASS/SSA tag cleanup)
-- Autoplay next episode (configurable)
+- Autoplay next episode or collection item (configurable)
 - Playback reporting back to Jellyfin (resume, progress, stopped)
 
 **Parental Controls**
@@ -52,6 +53,13 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 - Dot-file access blocked in nginx
 - Docker container runs with no-new-privileges and resource limits
 - PIN-protected routes (direct URL navigation to parent dashboard requires PIN)
+
+**Updates**
+- Built-in update check compares the running app against the deployed version on the server
+- Manual "Check for updates" button in the parent dashboard with status feedback
+- Automatic hourly background check -- parents see a banner when an update is available
+- No external connections -- checks `/version.json` on the same server KidFin is hosted on
+- Works over plain HTTP (no service worker or HTTPS required)
 
 **Deployment**
 - Installable as a PWA (standalone mode, no browser URL bar)
@@ -152,6 +160,8 @@ git pull
 docker compose up -d --build
 ```
 
+After rebuilding, connected clients will detect the new version automatically (within one hour) or manually via the "Check for updates" button in the parent dashboard.
+
 ## Local Development
 
 ```bash
@@ -174,11 +184,11 @@ Opens at `http://localhost:5173` by default.
 
 ```
 src/
-  api/           # Jellyfin API client (auth, items, episodes, streaming, subtitles)
+  api/           # Jellyfin API client (auth, items, episodes, collections, streaming, subtitles)
   components/    # Card, Player, Modal, PinPad, ProfileCard
   screens/       # Setup, ProfileSelect, Home, Detail, ParentDashboard
   context/       # React context for app state (profiles, settings, PIN auth)
-  hooks/         # useJellyfin (data fetching), useProfiles (CRUD), useSessionTimer
+  hooks/         # useJellyfin (data fetching), useProfiles (CRUD), useSessionTimer, useUpdateCheck
   utils/         # ratings.js, storage.js, themes.js, fonts.js
   App.jsx        # Router and route definitions
   main.jsx       # Entry point and service worker registration
@@ -213,6 +223,7 @@ Per profile:
 Global settings:
 - Allow/disallow scrubbing in the video player
 - Autoplay next episode on/off
+- Check for updates
 - Change parent PIN
 
 ## Security Notes

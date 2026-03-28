@@ -1,8 +1,7 @@
 const CACHE_NAME = 'kidfin-v1';
 
 self.addEventListener('install', () => {
-  // Don't activate immediately — wait for the app to trigger skipWaiting
-  // so the user sees the update notice first
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -11,12 +10,6 @@ self.addEventListener('activate', (event) => {
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
     ).then(() => clients.claim())
   );
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data === 'skipWaiting') {
-    self.skipWaiting();
-  }
 });
 
 self.addEventListener('fetch', (event) => {
