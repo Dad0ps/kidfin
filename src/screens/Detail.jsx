@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useItemDetail, useEpisodes, useCollectionItems } from '../hooks/useJellyfin';
 import { getImageUrl } from '../api/jellyfin';
@@ -20,6 +20,9 @@ export default function Detail() {
   const { episodes, loading: epLoading } = useEpisodes(isSeries ? id : null);
   const { items: collectionItems, loading: colLoading } = useCollectionItems(isCollection ? id : null);
   const [playingId, setPlayingId] = useState(null);
+  const [nextUp, setNextUp] = useState(null);
+  const [countdown, setCountdown] = useState(0);
+  const countdownRef = useRef(null);
 
   useEffect(() => {
     if (currentProfile) {
@@ -96,15 +99,55 @@ export default function Detail() {
     return null;
   }
 
+  const cancelAutoplay = useCallback(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setNextUp(null);
+    setCountdown(0);
+    setPlayingId(null);
+  }, []);
+
+  const skipToNext = useCallback(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    const next = nextUp;
+    setNextUp(null);
+    setCountdown(0);
+    if (next) setPlayingId(next);
+  }, [nextUp]);
+
   function handleEnded() {
     if (parentSettings.autoplayNext) {
       const next = findNextItem(playingId);
       if (next) {
-        setPlayingId(next);
+        setPlayingId(null);
+        setNextUp(next);
+        setCountdown(10);
+        countdownRef.current = setInterval(() => {
+          setCountdown((c) => {
+            if (c <= 1) {
+              clearInterval(countdownRef.current);
+              setNextUp(null);
+              setPlayingId(next);
+              return 0;
+            }
+            return c - 1;
+          });
+        }, 1000);
         return;
       }
     }
     setPlayingId(null);
+  }
+
+  if (nextUp && !playingId) {
+    return (
+      <div className={styles.autoplayOverlay}>
+        <div className={styles.autoplayText}>Next up in {countdown}...</div>
+        <div className={styles.autoplayActions}>
+          <button className="btn-primary" onClick={skipToNext}>Play Now</button>
+          <button className="btn-secondary" onClick={cancelAutoplay}>Stop</button>
+        </div>
+      </div>
+    );
   }
 
   if (playingId) {

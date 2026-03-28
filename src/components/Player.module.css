@@ -169,6 +169,15 @@
   color: var(--accent-mint);
 }
 
+.ccLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px 2px;
+}
+
 .ccMenu {
   position: absolute;
   bottom: 100%;

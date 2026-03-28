@@ -53,6 +53,12 @@
   color: var(--text-secondary);
 }
 
+.hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .error {
   background: rgba(255, 107, 107, 0.15);
   border: 1px solid var(--accent-coral);

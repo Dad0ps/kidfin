@@ -51,7 +51,6 @@ export default function ProfileSelect() {
     setShowPin(false);
     if (isInBedtime(profile)) {
       setBedtimeMessage(profile.name);
-      setTimeout(() => setBedtimeMessage(null), 3000);
       return;
     }
     if (profile.profilePin) {
@@ -100,12 +99,15 @@ export default function ProfileSelect() {
 
       {bedtimeMessage && (
         <div className={styles.bedtimeNotice}>
-          It's bedtime for {bedtimeMessage}!
+          <div className={styles.bedtimeIcon}>🌙</div>
+          <div>It's bedtime for {bedtimeMessage}!</div>
+          <div className={styles.bedtimeHint}>Time to rest. See you tomorrow!</div>
+          <button className={styles.bedtimeBtn} onClick={() => setBedtimeMessage(null)}>OK</button>
         </div>
       )}
 
       <button className={styles.parentBtn} onClick={() => setShowPin(true)}>
-        Parent
+        Parent Settings
       </button>
 
       {showPin && !profilePinTarget && (

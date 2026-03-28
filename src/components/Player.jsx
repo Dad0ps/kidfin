@@ -201,7 +201,7 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
         });
       }
     } else {
-      setError('Unable to play this video. The format may not be supported by your browser.');
+      setError('This one won\'t play right now. Try something else!');
     }
   }
 
@@ -321,6 +321,7 @@ export default function Player({ itemId, onExit, onEnded, userInitiated = false 
             </button>
             {showCCMenu && (
               <div className={styles.ccMenu} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.ccLabel}>Subtitles</div>
                 <button
                   className={`${styles.ccOption} ${activeSubtitle === -1 ? styles.ccOptionActive : ''}`}
                   onClick={() => handleSubtitleSelect(-1)}

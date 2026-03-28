@@ -11,11 +11,21 @@ All notable changes to KidFin are documented here.
 - Disconnect from Jellyfin button in parent dashboard (preserves profiles)
 - Clear All Profiles button with confirmation
 - Delete profile now requires confirmation
+- Parent PIN setup step added to initial setup flow with default PIN disclosure
+- Session timer pulses red when 5 minutes or less remain
+- Autoplay countdown between episodes with Play Now and Stop buttons
+- Bedtime rejection is now a full-screen overlay with a dismiss button
+- Loading state shows "Finding your shows..." text above skeleton grid
+- Subtitle menu now has a "Subtitles" label for clarity
 
 ### Fixes
 - Removed HSTS header that forced HTTPS after first visit, breaking HTTP-only deployments
 - Fixed parent dashboard re-locking when background actions triggered re-renders
-- Edit Profile button text color now matches Switch Profile
+- Player error message changed to kid-friendly language
+- Empty library message now says "Ask a grown-up to add shows for you!"
+- PIN lockout messages rewritten to be friendlier
+- Parent button renamed to "Parent Settings" to avoid confusion
+- Edit Profile button de-emphasized to prevent accidental taps by kids
 
 ## Version 1.0
 
