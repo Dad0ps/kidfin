@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useItemDetail, useEpisodes } from '../hooks/useJellyfin';
+import { useItemDetail, useEpisodes, useCollectionItems } from '../hooks/useJellyfin';
 import { getImageUrl } from '../api/jellyfin';
 import Player from '../components/Player';
 import { useApp } from '../context/AppContext';
@@ -16,7 +16,9 @@ export default function Detail() {
   const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
   const { item, loading } = useItemDetail(id);
   const isSeries = item?.Type === 'Series';
+  const isCollection = item?.Type === 'BoxSet';
   const { episodes, loading: epLoading } = useEpisodes(isSeries ? id : null);
+  const { items: collectionItems, loading: colLoading } = useCollectionItems(isCollection ? id : null);
   const [playingId, setPlayingId] = useState(null);
 
   useEffect(() => {
@@ -84,17 +86,19 @@ export default function Detail() {
     setPlayingId(epId);
   }
 
-  function findNextEpisode(currentId) {
-    const idx = episodes.findIndex((ep) => ep.Id === currentId);
-    if (idx >= 0 && idx < episodes.length - 1) {
-      return episodes[idx + 1].Id;
+  const playableList = isCollection ? collectionItems : episodes;
+
+  function findNextItem(currentId) {
+    const idx = playableList.findIndex((i) => i.Id === currentId);
+    if (idx >= 0 && idx < playableList.length - 1) {
+      return playableList[idx + 1].Id;
     }
     return null;
   }
 
   function handleEnded() {
     if (parentSettings.autoplayNext) {
-      const next = findNextEpisode(playingId);
+      const next = findNextItem(playingId);
       if (next) {
         setPlayingId(next);
         return;
@@ -146,51 +150,81 @@ export default function Detail() {
       </div>
 
       <div className={styles.episodes}>
-        {epLoading ? (
-          <p className={styles.epLoading}>Loading episodes...</p>
+        {isCollection ? (
+          colLoading ? (
+            <p className={styles.epLoading}>Loading movies...</p>
+          ) : (
+            <div className={styles.epList}>
+              {collectionItems.map((movie) => (
+                <button
+                  key={movie.Id}
+                  className={styles.epCard}
+                  onClick={() => handlePlayEpisode(movie.Id)}
+                >
+                  <img
+                    src={getImageUrl(movie.Id, 'Primary', { maxHeight: 120 })}
+                    alt=""
+                    className={styles.epThumb}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <div className={styles.epInfo}>
+                    <div className={styles.epName}>{movie.Name}</div>
+                    {movie.ProductionYear && (
+                      <div className={styles.epOverview}>{movie.ProductionYear}</div>
+                    )}
+                  </div>
+                  <div className={styles.epPlay}>▶</div>
+                </button>
+              ))}
+            </div>
+          )
         ) : (
-          Object.entries(seasonGroups)
-            .sort(([a], [b]) => a - b)
-            .map(([season, eps]) => (
-              <div key={season} className={styles.season}>
-                <h2 className={styles.seasonTitle}>Season {season}</h2>
-                <div className={styles.epList}>
-                  {eps.map((ep) => (
-                    <button
-                      key={ep.Id}
-                      className={styles.epCard}
-                      onClick={() => handlePlayEpisode(ep.Id)}
-                    >
-                      <img
-                        src={getImageUrl(ep.Id, 'Primary', { maxHeight: 120 })}
-                        alt=""
-                        className={styles.epThumb}
-                        onError={(e) => {
-                          if (!e.target.dataset.fallback) {
-                            e.target.dataset.fallback = '1';
-                            e.target.src = getImageUrl(ep.Id, 'Thumb', { maxHeight: 120 });
-                          } else {
-                            e.target.style.display = 'none';
-                          }
-                        }}
-                      />
-                      <div className={styles.epNumber}>E{ep.IndexNumber}</div>
-                      <div className={styles.epInfo}>
-                        <div className={styles.epName}>{ep.Name}</div>
-                        {ep.Overview && (
-                          <div className={styles.epOverview}>
-                            {ep.Overview.length > 120
-                              ? ep.Overview.slice(0, 120) + '...'
-                              : ep.Overview}
-                          </div>
-                        )}
-                      </div>
-                      <div className={styles.epPlay}>▶</div>
-                    </button>
-                  ))}
+          epLoading ? (
+            <p className={styles.epLoading}>Loading episodes...</p>
+          ) : (
+            Object.entries(seasonGroups)
+              .sort(([a], [b]) => a - b)
+              .map(([season, eps]) => (
+                <div key={season} className={styles.season}>
+                  <h2 className={styles.seasonTitle}>Season {season}</h2>
+                  <div className={styles.epList}>
+                    {eps.map((ep) => (
+                      <button
+                        key={ep.Id}
+                        className={styles.epCard}
+                        onClick={() => handlePlayEpisode(ep.Id)}
+                      >
+                        <img
+                          src={getImageUrl(ep.Id, 'Primary', { maxHeight: 120 })}
+                          alt=""
+                          className={styles.epThumb}
+                          onError={(e) => {
+                            if (!e.target.dataset.fallback) {
+                              e.target.dataset.fallback = '1';
+                              e.target.src = getImageUrl(ep.Id, 'Thumb', { maxHeight: 120 });
+                            } else {
+                              e.target.style.display = 'none';
+                            }
+                          }}
+                        />
+                        <div className={styles.epNumber}>E{ep.IndexNumber}</div>
+                        <div className={styles.epInfo}>
+                          <div className={styles.epName}>{ep.Name}</div>
+                          {ep.Overview && (
+                            <div className={styles.epOverview}>
+                              {ep.Overview.length > 120
+                                ? ep.Overview.slice(0, 120) + '...'
+                                : ep.Overview}
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.epPlay}>▶</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))
+          )
         )}
       </div>
     </div>

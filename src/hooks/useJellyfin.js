@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getItems, getEpisodes, getItemById, getVirtualFolders } from '../api/jellyfin';
+import { getItems, getEpisodes, getCollectionItems, getItemById, getVirtualFolders } from '../api/jellyfin';
 import { useApp } from '../context/AppContext';
 import { isRatingAllowed } from '../utils/ratings';
 
@@ -17,7 +17,7 @@ export function useAllItems() {
     if (!currentProfile) return;
     setLoading(true);
     const params = {
-      IncludeItemTypes: 'Movie,Series',
+      IncludeItemTypes: 'Movie,Series,BoxSet',
       SortBy: 'SortName',
       SortOrder: 'Ascending',
     };
@@ -63,6 +63,22 @@ export function useEpisodes(seriesId) {
   }, [seriesId]);
 
   return { episodes, loading };
+}
+
+export function useCollectionItems(collectionId) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!collectionId) return;
+    setLoading(true);
+    getCollectionItems(collectionId)
+      .then((data) => setItems(data.Items || []))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }, [collectionId]);
+
+  return { items, loading };
 }
 
 export function useVirtualFolders() {
