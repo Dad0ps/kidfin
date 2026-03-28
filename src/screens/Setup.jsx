@@ -71,7 +71,6 @@ export default function Setup() {
                 placeholder="Enter a 4-digit PIN"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                required
               />
               <span className={styles.hint}>This PIN protects the parent dashboard. Default is 1234 if skipped.</span>
             </label>
