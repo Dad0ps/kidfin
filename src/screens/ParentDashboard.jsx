@@ -9,6 +9,7 @@ import { getAllRatings } from '../utils/ratings';
 import { THEMES, applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
 import { FONTS, applyFont, applyFontSize, clearFont, DEFAULT_FONT_SIZE, MIN_FONT_SIZE, MAX_FONT_SIZE } from '../utils/fonts';
 import Modal from '../components/Modal';
+import { clearSetup } from '../utils/storage';
 import styles from './ParentDashboard.module.css';
 
 const AVATARS = ['😊', '🦊', '🐻', '🦁', '🐰', '🐸', '🦄', '🐼', '🐶', '🐱', '🦋', '🌟', '🚀', '🎨'];
@@ -25,6 +26,7 @@ const SESSION_OPTIONS = [
 
 function ProfileCard({ profile, folders, onSave, onDelete }) {
   const [expanded, setExpanded] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [name, setName] = useState(profile.name);
   const [avatar, setAvatar] = useState(profile.avatar || '😊');
   const [allowedLibraryId, setAllowedLibraryId] = useState(profile.allowedLibraryId || '');
@@ -267,9 +269,21 @@ function ProfileCard({ profile, folders, onSave, onDelete }) {
 
           {/* Actions */}
           <div className={styles.cardActions}>
-            <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => onDelete(profile.id)}>
-              Delete Profile
-            </button>
+            {confirmDelete ? (
+              <>
+                <span className={styles.confirmText}>Delete {name}?</span>
+                <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => onDelete(profile.id)}>
+                  Yes, Delete
+                </button>
+                <button className={styles.actionBtn} onClick={() => setConfirmDelete(false)}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => setConfirmDelete(true)}>
+                Delete Profile
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -314,12 +328,14 @@ function AddProfileForm({ folders, onSave, onCancel }) {
 export default function ParentDashboard() {
   const navigate = useNavigate();
   const { parentPin, updateParentPin, parentSettings, updateParentSettings, parentUnlocked, setParentUnlocked } = useApp();
-  const { profiles, addProfile, editProfile, deleteProfile } = useProfiles();
+  const { profiles, addProfile, editProfile, deleteProfile, clearProfiles } = useProfiles();
   const { folders } = useVirtualFolders();
   const { updateAvailable, checking, status, applyUpdate, checkForUpdate } = useUpdateCheck();
   const [showAdd, setShowAdd] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [confirmClearProfiles, setConfirmClearProfiles] = useState(false);
 
   // Require PIN if navigated directly (not via profile select PIN flow)
   if (!parentUnlocked) {
@@ -438,6 +454,46 @@ export default function ParentDashboard() {
           <button type="submit" className="btn-primary">Update PIN</button>
           {pinMessage && <span className={styles.pinMsg}>{pinMessage}</span>}
         </form>
+      </section>
+
+      {/* Disconnect */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Server</h2>
+        {confirmDisconnect ? (
+          <div className={styles.disconnectConfirm}>
+            <span className={styles.confirmText}>Disconnect from Jellyfin? Profiles and settings will be kept.</span>
+            <div className={styles.disconnectActions}>
+              <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => { clearSetup(); window.location.href = '/setup'; }}>
+                Yes, Disconnect
+              </button>
+              <button className={styles.actionBtn} onClick={() => setConfirmDisconnect(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button className={styles.disconnectBtn} onClick={() => setConfirmDisconnect(true)}>
+            Disconnect from Jellyfin
+          </button>
+        )}
+        {confirmClearProfiles ? (
+          <div className={styles.disconnectConfirm}>
+            <span className={styles.confirmText}>Delete all profiles? This cannot be undone.</span>
+            <div className={styles.disconnectActions}>
+              <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => { clearProfiles(); setConfirmClearProfiles(false); }}>
+                Yes, Clear All
+              </button>
+              <button className={styles.actionBtn} onClick={() => setConfirmClearProfiles(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button className={styles.disconnectBtn} onClick={() => setConfirmClearProfiles(true)}>
+            Clear All Profiles
+          </button>
+        )}
+        <p className={styles.buildInfo}>Build: {__BUILD_TIME__}</p>
       </section>
 
       {/* Add Profile Modal */}

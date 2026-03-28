@@ -24,5 +24,9 @@ export function useProfiles() {
     updateChildProfiles(childProfiles.filter((p) => p.id !== id));
   }, [childProfiles, updateChildProfiles]);
 
-  return { profiles: childProfiles, addProfile, editProfile, deleteProfile };
+  const clearProfiles = useCallback(() => {
+    updateChildProfiles([]);
+  }, [updateChildProfiles]);
+
+  return { profiles: childProfiles, addProfile, editProfile, deleteProfile, clearProfiles };
 }

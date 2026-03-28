@@ -66,6 +66,12 @@ export function setParentSettings(settings) {
   localStorage.setItem(KEYS.PARENT_SETTINGS, JSON.stringify(settings));
 }
 
+export function clearSetup() {
+  localStorage.removeItem(KEYS.SERVER_URL);
+  localStorage.removeItem(KEYS.ACCESS_TOKEN);
+  localStorage.removeItem(KEYS.ADMIN_USER_ID);
+}
+
 export function isSetupComplete() {
   return !!getServerUrl() && !!getAccessToken();
 }
