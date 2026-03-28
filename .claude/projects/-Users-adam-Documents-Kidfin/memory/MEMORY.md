@@ -1,0 +1,1 @@
+- [Version freeze](project_version.md) — Stay on v1.0 in README until user says otherwise
