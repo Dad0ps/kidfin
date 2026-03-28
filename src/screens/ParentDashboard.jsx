@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useProfiles } from '../hooks/useProfiles';
 import { useVirtualFolders } from '../hooks/useJellyfin';
-import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import PinPad from '../components/PinPad';
 import { getAllRatings } from '../utils/ratings';
 import { THEMES, applyTheme, getThemeForProfile, clearTheme } from '../utils/themes';
@@ -316,8 +315,6 @@ export default function ParentDashboard() {
   const { parentPin, updateParentPin, parentSettings, updateParentSettings, parentUnlocked, setParentUnlocked } = useApp();
   const { profiles, addProfile, editProfile, deleteProfile } = useProfiles();
   const { folders } = useVirtualFolders();
-  const { updateAvailable, applyUpdate } = useUpdateCheck();
-
   const [showAdd, setShowAdd] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
@@ -408,11 +405,6 @@ export default function ParentDashboard() {
             />
             <span className={styles.toggleLabel}>Autoplay next episode</span>
           </label>
-          {updateAvailable && (
-            <button className={styles.updateBanner} onClick={applyUpdate}>
-              A new version of KidFin is available — tap to update
-            </button>
-          )}
         </div>
       </section>
 
