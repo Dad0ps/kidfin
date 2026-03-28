@@ -19,6 +19,8 @@ All notable changes to KidFin are documented here.
 - Subtitle menu now has a "Subtitles" label for clarity
 
 ### Fixes
+- Service worker cache name now auto-generated per build, preventing stale cached assets from breaking updates
+- PIN setup skip button no longer blocked by form validation
 - Removed HSTS header that forced HTTPS after first visit, breaking HTTP-only deployments
 - Fixed parent dashboard re-locking when background actions triggered re-renders
 - Player error message changed to kid-friendly language
