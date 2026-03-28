@@ -13,6 +13,8 @@ All notable changes to KidFin are documented here.
 - Delete profile now requires confirmation
 
 ### Fixes
+- Removed HSTS header that forced HTTPS after first visit, breaking HTTP-only deployments
+- Fixed parent dashboard re-locking when background actions triggered re-renders
 - Edit Profile button text color now matches Switch Profile
 
 ## Version 1.0
