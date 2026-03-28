@@ -5,6 +5,7 @@ const CHECK_INTERVAL = 60 * 60 * 1000; // check every hour
 export function useUpdateCheck() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [status, setStatus] = useState(null);
 
   const applyUpdate = useCallback(() => {
     navigator.serviceWorker?.getRegistration().then((reg) => {
@@ -15,12 +16,29 @@ export function useUpdateCheck() {
   }, []);
 
   const checkForUpdate = useCallback(() => {
-    if (!('serviceWorker' in navigator)) return;
+    if (!('serviceWorker' in navigator)) {
+      setStatus('Service worker not supported');
+      return;
+    }
     setChecking(true);
+    setStatus(null);
     navigator.serviceWorker.getRegistration()
-      .then((reg) => reg?.update())
-      .catch(() => {})
-      .finally(() => setTimeout(() => setChecking(false), 1000));
+      .then((reg) => {
+        if (!reg) {
+          setStatus('No service worker registered');
+          setChecking(false);
+          return;
+        }
+        return reg.update().then(() => {
+          if (reg.waiting) {
+            setUpdateAvailable(true);
+          } else {
+            setStatus('You are on the latest version');
+          }
+        });
+      })
+      .catch(() => setStatus('Could not reach server'))
+      .finally(() => setChecking(false));
   }, []);
 
   useEffect(() => {
@@ -57,5 +75,5 @@ export function useUpdateCheck() {
     return () => clearInterval(interval);
   }, []);
 
-  return { updateAvailable, checking, applyUpdate, checkForUpdate };
+  return { updateAvailable, checking, status, applyUpdate, checkForUpdate };
 }
