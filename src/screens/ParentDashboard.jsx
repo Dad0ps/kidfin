@@ -316,7 +316,7 @@ export default function ParentDashboard() {
   const { parentPin, updateParentPin, parentSettings, updateParentSettings, parentUnlocked, setParentUnlocked } = useApp();
   const { profiles, addProfile, editProfile, deleteProfile } = useProfiles();
   const { folders } = useVirtualFolders();
-  const { updateAvailable, checking, applyUpdate, checkForUpdate } = useUpdateCheck();
+  const { updateAvailable, checking, status, applyUpdate, checkForUpdate } = useUpdateCheck();
   const [showAdd, setShowAdd] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
@@ -412,9 +412,12 @@ export default function ParentDashboard() {
               A new version of KidFin is available — tap to update
             </button>
           ) : (
-            <button className={styles.checkUpdateBtn} onClick={checkForUpdate} disabled={checking}>
-              {checking ? 'Checking...' : 'Check for updates'}
-            </button>
+            <div className={styles.updateRow}>
+              <button className={styles.checkUpdateBtn} onClick={checkForUpdate} disabled={checking}>
+                {checking ? 'Checking...' : 'Check for updates'}
+              </button>
+              {status && <span className={styles.updateStatus}>{status}</span>}
+            </div>
           )}
         </div>
       </section>

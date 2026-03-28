@@ -379,6 +379,13 @@
   background: rgba(92, 224, 216, 0.2);
 }
 
+.updateRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .checkUpdateBtn {
   padding: 10px 16px;
   border-radius: var(--radius-sm);
@@ -398,6 +405,12 @@
 .checkUpdateBtn:disabled {
   cursor: default;
   opacity: 0.6;
+}
+
+.updateStatus {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 /* PIN */
