@@ -38,6 +38,19 @@
   background: rgba(255, 138, 92, 0.15);
   padding: 4px 12px;
   border-radius: 20px;
+  transition: all 0.3s;
+}
+
+.timerWarning {
+  color: var(--accent-coral);
+  background: rgba(255, 107, 107, 0.2);
+  font-size: 16px;
+  animation: timerPulse 2s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .headerRight {
@@ -47,19 +60,18 @@
 }
 
 .editBtn {
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-size: 16px;
-  font-weight: 700;
-  padding: 10px 20px;
-  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
   border: none;
-  transition: background 0.2s;
+  transition: color 0.2s;
 }
 
 .editBtn:hover {
-  background: rgba(167, 139, 250, 0.15);
-  color: var(--accent-purple);
+  color: var(--text-secondary);
 }
 
 .backBtn {
@@ -97,6 +109,14 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.8; }
+}
+
+.loadingText {
+  width: 100%;
+  color: var(--text-muted);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .empty {

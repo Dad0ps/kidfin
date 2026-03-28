@@ -215,6 +215,31 @@
   opacity: 1;
 }
 
+/* Autoplay countdown */
+
+.autoplayOverlay {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: var(--bg-primary);
+  text-align: center;
+  padding: 32px;
+}
+
+.autoplayText {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.autoplayActions {
+  display: flex;
+  gap: 16px;
+}
+
 @media (max-width: 768px) {
   .detail {
     flex-direction: column;

@@ -39,11 +39,11 @@ export default function PinPad({ onSubmit, onCancel, title = 'Enter PIN', digits
       if (ok === false) {
         attempts.current += 1;
         if (attempts.current >= MAX_ATTEMPTS) {
-          setError(`Too many attempts. Wait ${LOCKOUT_SECONDS}s.`);
+          setError('Oops! Let\'s try again in a moment.');
           setPin('');
           startLockout();
         } else {
-          setError(`Wrong PIN (${MAX_ATTEMPTS - attempts.current} tries left)`);
+          setError(`That wasn't right. ${MAX_ATTEMPTS - attempts.current} tries left.`);
           setPin('');
         }
       }
@@ -66,7 +66,7 @@ export default function PinPad({ onSubmit, onCancel, title = 'Enter PIN', digits
           ))}
         </div>
         {error && <div className={styles.error}>{error}</div>}
-        {locked && <div className={styles.lockout}>Locked for {lockCountdown}s</div>}
+        {locked && <div className={styles.lockout}>Try again in {lockCountdown}s</div>}
         <div className={styles.grid}>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, 'del'].map((key, i) => (
             <button

@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authenticateByName } from '../api/jellyfin';
-import { setServerUrl, setAccessToken, setAdminUserId } from '../utils/storage';
+import { setServerUrl, setAccessToken, setAdminUserId, setParentPin } from '../utils/storage';
 import styles from './Setup.module.css';
 
 export default function Setup() {
   const navigate = useNavigate();
+  const [step, setStep] = useState('connect');
   const [serverUrl, setServerUrlInput] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e) {
+  async function handleConnect(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -32,12 +34,55 @@ export default function Setup() {
       setServerUrl(url);
       setAccessToken(data.AccessToken);
       setAdminUserId(data.User.Id);
-      window.location.href = '/profiles';
+      setStep('pin');
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handlePinSubmit(e) {
+    e.preventDefault();
+    if (pin.length === 4 && /^\d{4}$/.test(pin)) {
+      setParentPin(pin);
+    }
+    window.location.href = '/profiles';
+  }
+
+  if (step === 'pin') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.logo}>🐠</div>
+          <h1 className={styles.title}>KidFin</h1>
+          <p className={styles.subtitle}>Set your parent dashboard PIN</p>
+
+          <form onSubmit={handlePinSubmit} className={styles.form}>
+            <label className={styles.label}>
+              Parent PIN (4 digits)
+              <input
+                className="input-field"
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                maxLength={4}
+                placeholder="Enter a 4-digit PIN"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                required
+              />
+              <span className={styles.hint}>This PIN protects the parent dashboard. Default is 1234 if skipped.</span>
+            </label>
+
+            <button type="submit" className="btn-primary" style={{ width: '100%' }}>
+              {pin.length === 4 ? 'Set PIN' : 'Skip (use default 1234)'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -47,7 +92,7 @@ export default function Setup() {
         <h1 className={styles.title}>KidFin</h1>
         <p className={styles.subtitle}>Connect to your Jellyfin server</p>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleConnect} className={styles.form}>
           <label className={styles.label}>
             Server URL
             <input

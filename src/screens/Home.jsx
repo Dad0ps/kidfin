@@ -14,7 +14,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { currentProfile, parentPin, setParentUnlocked } = useApp();
   const { items, loading } = useAllItems();
-  const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
+  const { minutesLeft, isLocked, lockReason, isWarning } = useSessionTimer(currentProfile);
   const [playingId, setPlayingId] = useState(null);
   const [showPin, setShowPin] = useState(false);
 
@@ -78,7 +78,7 @@ export default function Home() {
           <span className={styles.avatar}>{currentProfile.avatar || '😊'}</span>
           <span className={styles.name}>{currentProfile.name}</span>
           {minutesLeft !== null && (
-            <span className={styles.timer}>
+            <span className={`${styles.timer} ${isWarning ? styles.timerWarning : ''}`}>
               {minutesLeft}m left
             </span>
           )}
@@ -109,15 +109,19 @@ export default function Home() {
       )}
 
       <main className={styles.grid}>
-        {loading
-          ? Array.from({ length: 12 }).map((_, i) => (
+        {loading ? (
+          <>
+            <p className={styles.loadingText}>Finding your shows...</p>
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className={styles.skeleton} />
-            ))
-          : items.map((item) => (
-              <Card key={item.Id} item={item} onClick={() => handleCardClick(item)} />
             ))}
-        {!loading && items.length === 0 && (
-          <p className={styles.empty}>Nothing here yet!</p>
+          </>
+        ) : items.length === 0 ? (
+          <p className={styles.empty}>Ask a grown-up to add shows for you!</p>
+        ) : (
+          items.map((item) => (
+            <Card key={item.Id} item={item} onClick={() => handleCardClick(item)} />
+          ))
         )}
       </main>
     </div>

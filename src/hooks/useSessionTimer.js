@@ -107,5 +107,7 @@ export function useSessionTimer(profile) {
   const isLocked = realtimeExpired || bedtime;
   const lockReason = bedtime ? 'bedtime' : realtimeExpired ? 'timer' : null;
 
-  return { minutesLeft, isLocked, lockReason };
+  const isWarning = minutesLeft !== null && minutesLeft <= 5 && !isLocked;
+
+  return { minutesLeft, isLocked, lockReason, isWarning };
 }
