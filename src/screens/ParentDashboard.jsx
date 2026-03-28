@@ -316,7 +316,7 @@ export default function ParentDashboard() {
   const { parentPin, updateParentPin, parentSettings, updateParentSettings, parentUnlocked, setParentUnlocked } = useApp();
   const { profiles, addProfile, editProfile, deleteProfile } = useProfiles();
   const { folders } = useVirtualFolders();
-  const { updateAvailable, applyUpdate } = useUpdateCheck();
+  const { updateAvailable, checking, applyUpdate, checkForUpdate } = useUpdateCheck();
   const [showAdd, setShowAdd] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
@@ -407,9 +407,13 @@ export default function ParentDashboard() {
             />
             <span className={styles.toggleLabel}>Autoplay next episode</span>
           </label>
-          {updateAvailable && (
+          {updateAvailable ? (
             <button className={styles.updateBanner} onClick={applyUpdate}>
               A new version of KidFin is available — tap to update
+            </button>
+          ) : (
+            <button className={styles.checkUpdateBtn} onClick={checkForUpdate} disabled={checking}>
+              {checking ? 'Checking...' : 'Check for updates'}
             </button>
           )}
         </div>
