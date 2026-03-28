@@ -360,25 +360,6 @@
   color: var(--text-secondary);
 }
 
-/* Update banner */
-
-.updateBanner {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  background: rgba(92, 224, 216, 0.1);
-  border: 1px solid var(--accent-mint);
-  color: var(--accent-mint);
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.updateBanner:hover {
-  background: rgba(92, 224, 216, 0.2);
-}
-
 /* PIN */
 
 .pinForm {
