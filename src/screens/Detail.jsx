@@ -14,7 +14,7 @@ export default function Detail() {
   const navigate = useNavigate();
   const { parentSettings, currentProfile } = useApp();
   const { minutesLeft, isLocked, lockReason } = useSessionTimer(currentProfile);
-  const { item, loading } = useItemDetail(id);
+  const { item, loading, error } = useItemDetail(id);
   const isSeries = item?.Type === 'Series';
   const isCollection = item?.Type === 'BoxSet';
   const { episodes, loading: epLoading } = useEpisodes(isSeries ? id : null);
@@ -69,8 +69,10 @@ export default function Detail() {
   if (!item) {
     return (
       <div className={styles.loading}>
-        <p>Item not found</p>
-        <button className="btn-secondary" onClick={() => navigate(-1)}>Go Back</button>
+        <p style={{ fontSize: 20, color: 'var(--text-primary)' }}>
+          {error || 'Item not found'}
+        </p>
+        <button className="btn-primary" onClick={() => navigate('/home')}>Go Back</button>
       </div>
     );
   }

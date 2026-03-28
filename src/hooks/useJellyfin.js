@@ -36,17 +36,19 @@ export function useAllItems() {
 export function useItemDetail(itemId) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!itemId) return;
     setLoading(true);
+    setError(null);
     getItemById(itemId)
       .then(setItem)
-      .catch(() => setItem(null))
+      .catch((err) => { setItem(null); setError(err.message); })
       .finally(() => setLoading(false));
   }, [itemId]);
 
-  return { item, loading };
+  return { item, loading, error };
 }
 
 export function useEpisodes(seriesId) {
