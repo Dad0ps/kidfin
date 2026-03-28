@@ -2,6 +2,19 @@
 
 All notable changes to KidFin are documented here.
 
+## Version 1.1
+
+### Features
+- Collection (BoxSet) support -- tap a collection to browse and play its movies
+- Built-in update check with manual button and hourly auto-check via version.json
+- Build timestamp and version number displayed in parent dashboard
+- Disconnect from Jellyfin button in parent dashboard (preserves profiles)
+- Clear All Profiles button with confirmation
+- Delete profile now requires confirmation
+
+### Fixes
+- Edit Profile button text color now matches Switch Profile
+
 ## Version 1.0
 
 ### Features
