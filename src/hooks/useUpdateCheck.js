@@ -4,6 +4,7 @@ const CHECK_INTERVAL = 60 * 60 * 1000; // check every hour
 
 export function useUpdateCheck() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   const applyUpdate = useCallback(() => {
     navigator.serviceWorker?.getRegistration().then((reg) => {
@@ -11,6 +12,15 @@ export function useUpdateCheck() {
         reg.waiting.postMessage('skipWaiting');
       }
     });
+  }, []);
+
+  const checkForUpdate = useCallback(() => {
+    if (!('serviceWorker' in navigator)) return;
+    setChecking(true);
+    navigator.serviceWorker.getRegistration()
+      .then((reg) => reg?.update())
+      .catch(() => {})
+      .finally(() => setTimeout(() => setChecking(false), 1000));
   }, []);
 
   useEffect(() => {
@@ -47,5 +57,5 @@ export function useUpdateCheck() {
     return () => clearInterval(interval);
   }, []);
 
-  return { updateAvailable, applyUpdate };
+  return { updateAvailable, checking, applyUpdate, checkForUpdate };
 }
