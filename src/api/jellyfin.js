@@ -69,6 +69,17 @@ export async function getEpisodes(seriesId, params = {}) {
   return apiFetch(`/Shows/${seriesId}/Episodes?${query}`);
 }
 
+export async function getCollectionItems(collectionId) {
+  const userId = getAdminUserId();
+  const query = new URLSearchParams({
+    ParentId: collectionId,
+    Fields: 'Overview,PrimaryImageAspectRatio',
+    SortBy: 'SortName',
+    SortOrder: 'Ascending',
+  });
+  return apiFetch(`/Users/${userId}/Items?${query}`);
+}
+
 export async function getVirtualFolders() {
   return apiFetch('/Library/VirtualFolders');
 }

@@ -53,7 +53,7 @@ export default function Home() {
   }
 
   function handleCardClick(item) {
-    if (item.Type === 'Series') {
+    if (item.Type === 'Series' || item.Type === 'BoxSet') {
       navigate(`/detail/${item.Id}`);
     } else {
       setPlayingId(item.Id);
