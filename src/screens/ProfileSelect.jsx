@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProfileCard from '../components/ProfileCard';
@@ -32,10 +32,12 @@ export default function ProfileSelect() {
   const [profilePinTarget, setProfilePinTarget] = useState(null);
   const [bedtimeMessage, setBedtimeMessage] = useState(null);
 
-  // Reset to defaults on profile select screen
-  clearTheme();
-  clearFont();
-  setParentUnlocked(false);
+  // Reset to defaults when profile select screen mounts
+  useEffect(() => {
+    clearTheme();
+    clearFont();
+    setParentUnlocked(false);
+  }, []);
 
   function enterProfile(profile) {
     setCurrentProfile(profile);
