@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kidfin-v1';
+const CACHE_NAME = '__CACHE_NAME__';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
