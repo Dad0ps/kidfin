@@ -7,70 +7,40 @@ export function useUpdateCheck() {
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState(null);
 
-  const applyUpdate = useCallback(() => {
-    navigator.serviceWorker?.getRegistration().then((reg) => {
-      if (reg?.waiting) {
-        reg.waiting.postMessage('skipWaiting');
-      }
-    });
-  }, []);
-
   const checkForUpdate = useCallback(() => {
-    if (!('serviceWorker' in navigator)) {
-      setStatus('Service worker not supported');
-      return;
-    }
     setChecking(true);
     setStatus(null);
-    navigator.serviceWorker.getRegistration()
-      .then((reg) => {
-        if (!reg) {
-          setStatus('No service worker registered');
-          setChecking(false);
-          return;
+    fetch('/version.json?_=' + Date.now())
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        if (data.buildTime !== __BUILD_TIME__) {
+          setUpdateAvailable(true);
+        } else {
+          setStatus('You are on the latest version');
         }
-        return reg.update().then(() => {
-          if (reg.waiting) {
-            setUpdateAvailable(true);
-          } else {
-            setStatus('You are on the latest version');
-          }
-        });
       })
       .catch(() => setStatus('Could not reach server'))
       .finally(() => setChecking(false));
   }, []);
 
+  const applyUpdate = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
-
-    let interval;
-
-    function onNewSW(reg) {
-      if (reg.waiting) {
-        setUpdateAvailable(true);
-        return;
-      }
-      reg.addEventListener('updatefound', () => {
-        const newSW = reg.installing;
-        if (!newSW) return;
-        newSW.addEventListener('statechange', () => {
-          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+    const interval = setInterval(() => {
+      fetch('/version.json?_=' + Date.now())
+        .then((res) => res.ok && res.json())
+        .then((data) => {
+          if (data && data.buildTime !== __BUILD_TIME__) {
             setUpdateAvailable(true);
           }
-        });
-      });
-    }
-
-    navigator.serviceWorker.getRegistration().then((reg) => {
-      if (!reg) return;
-      onNewSW(reg);
-      interval = setInterval(() => reg.update().catch(() => {}), CHECK_INTERVAL);
-    });
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+        })
+        .catch(() => {});
+    }, CHECK_INTERVAL);
 
     return () => clearInterval(interval);
   }, []);
