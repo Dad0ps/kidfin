@@ -32,6 +32,33 @@ export default function Detail() {
     }
   }, [currentProfile]);
 
+  const playableList = isCollection ? collectionItems : episodes;
+
+  const findNextItem = useCallback((currentId) => {
+    const idx = playableList.findIndex((i) => i.Id === currentId);
+    if (idx >= 0 && idx < playableList.length - 1) {
+      return playableList[idx + 1].Id;
+    }
+    return null;
+  }, [playableList]);
+
+  const cancelAutoplay = useCallback(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setNextUp(null);
+    setCountdown(0);
+    setPlayingId(null);
+  }, []);
+
+  const skipToNext = useCallback(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    const next = nextUp;
+    setNextUp(null);
+    setCountdown(0);
+    if (next) setPlayingId(next);
+  }, [nextUp]);
+
+  // All hooks above — early returns below
+
   if (!currentProfile) {
     return (
       <div className={styles.loading}>
@@ -95,31 +122,6 @@ export default function Detail() {
   function handlePlayEpisode(epId) {
     setPlayingId(epId);
   }
-
-  const playableList = isCollection ? collectionItems : episodes;
-
-  function findNextItem(currentId) {
-    const idx = playableList.findIndex((i) => i.Id === currentId);
-    if (idx >= 0 && idx < playableList.length - 1) {
-      return playableList[idx + 1].Id;
-    }
-    return null;
-  }
-
-  const cancelAutoplay = useCallback(() => {
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    setNextUp(null);
-    setCountdown(0);
-    setPlayingId(null);
-  }, []);
-
-  const skipToNext = useCallback(() => {
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    const next = nextUp;
-    setNextUp(null);
-    setCountdown(0);
-    if (next) setPlayingId(next);
-  }, [nextUp]);
 
   function handleEnded() {
     if (parentSettings.autoplayNext) {
