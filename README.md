@@ -49,17 +49,15 @@ A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple
 **Privacy and Security**
 - Zero outbound connections to third parties -- all traffic stays between the browser and your Jellyfin server
 - Self-hosted fonts (Nunito, Atkinson Hyperlegible, OpenDyslexic), no external CDN
-- Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and HSTS headers
+- Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy headers
 - Dot-file access blocked in nginx
 - Docker container runs with no-new-privileges and resource limits
 - PIN-protected routes (direct URL navigation to parent dashboard requires PIN)
 
 **Updates**
-- Built-in update check compares the running app against the deployed version on the server
-- Manual "Check for updates" button in the parent dashboard with status feedback
-- Automatic hourly background check -- parents see a banner when an update is available
-- No external connections -- checks `/version.json` on the same server KidFin is hosted on
-- Works over plain HTTP (no service worker or HTTPS required)
+- Built-in update detection via `/version.json` on the same server -- no external connections
+- Manual check and automatic hourly background check in the parent dashboard
+- Works over plain HTTP (no HTTPS required)
 
 **Deployment**
 - Installable as a PWA (standalone mode, no browser URL bar)
@@ -208,7 +206,7 @@ Items with no rating are treated as allowed (assumes the library is curated by t
 
 Accessible from the profile select screen or the home screen via PIN entry.
 
-Profiles are displayed as expandable cards -- tap to expand and edit settings inline. All changes save instantly.
+Profiles are displayed as expandable cards -- tap to expand and edit settings inline. All changes save instantly. Profile deletion requires confirmation.
 
 Per profile:
 - Name, avatar, and color theme
@@ -223,8 +221,11 @@ Per profile:
 Global settings:
 - Allow/disallow scrubbing in the video player
 - Autoplay next episode on/off
-- Check for updates
+- Check for updates (manual button with status feedback, plus automatic hourly check)
 - Change parent PIN
+- Disconnect from Jellyfin (clears auth, preserves profiles)
+- Clear all profiles (with confirmation)
+- Build timestamp and version number displayed at the bottom
 
 ## Security Notes
 
@@ -234,7 +235,7 @@ Global settings:
 - Video stream URLs include the API token as a query parameter. This is required because HTML5 video elements cannot use custom HTTP headers.
 - Session timers and bedtime checks use the device clock. They cannot be enforced against a user who modifies the system time.
 - The Docker container runs with no-new-privileges, resource limits (256MB, 0.5 CPU), and a healthcheck.
-- Security headers configured in nginx: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy, Strict-Transport-Security.
+- Security headers configured in nginx: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy.
 - Dot-file access is blocked in nginx.
 - The Proxmox setup script sanitizes all user input and does not use `eval()`.
 
