@@ -6,6 +6,8 @@
 
 A kid-friendly web frontend for Jellyfin media servers. KidFin provides a simple, colorful interface where children can browse and watch content from a family Jellyfin instance without navigating the full Jellyfin UI. No backend required -- the browser talks directly to your Jellyfin server.
 
+> **Security Tip:** Create a dedicated Jellyfin user for KidFin with playback-only permissions. Do not use your admin account -- KidFin stores the auth token in the browser, and a playback-only user limits what that token can access.
+
 ## Features
 
 **Content**
