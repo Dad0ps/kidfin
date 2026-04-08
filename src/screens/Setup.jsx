@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { authenticateByName } from '../api/jellyfin';
 import { setServerUrl, setAccessToken, setAdminUserId, setParentPin } from '../utils/storage';
 import styles from './Setup.module.css';
 
 export default function Setup() {
-  const navigate = useNavigate();
   const [step, setStep] = useState('connect');
   const [serverUrl, setServerUrlInput] = useState('');
   const [username, setUsername] = useState('');
@@ -90,6 +88,7 @@ export default function Setup() {
         <div className={styles.logo}>🐠</div>
         <h1 className={styles.title}>KidFin</h1>
         <p className={styles.subtitle}>Connect to your Jellyfin server</p>
+        <p className={styles.hint}>For security, create a dedicated Jellyfin user for KidFin with playback-only permissions instead of using your admin account.</p>
 
         <form onSubmit={handleConnect} className={styles.form}>
           <label className={styles.label}>
@@ -109,7 +108,7 @@ export default function Setup() {
             <input
               className="input-field"
               type="text"
-              placeholder="Admin username"
+              placeholder="Jellyfin username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required

@@ -19,6 +19,7 @@ All notable changes to KidFin are documented here.
 - Subtitle menu now has a "Subtitles" label for clarity
 
 ### Fixes
+- Fixed React hooks ordering in Detail screen that caused a crash when navigating to series or collections
 - Service worker cache name now auto-generated per build, preventing stale cached assets from breaking updates
 - PIN setup skip button no longer blocked by form validation
 - Removed HSTS header that forced HTTPS after first visit, breaking HTTP-only deployments
