@@ -171,10 +171,12 @@ Opens at `http://localhost:5173` by default.
 
 ## Initial Setup
 
-1. Open KidFin in a browser
-2. Enter your Jellyfin server URL (e.g. `http://192.168.1.10:8096`)
-3. Enter Jellyfin admin credentials to authenticate
-4. Use the parent dashboard (default PIN: `1234`) to create child profiles
+1. Create a dedicated Jellyfin user for KidFin with playback-only permissions (recommended -- avoids exposing admin credentials)
+2. Open KidFin in a browser
+3. Enter your Jellyfin server URL (e.g. `http://192.168.1.10:8096`)
+4. Enter the Jellyfin user credentials
+5. Set a parent PIN (or skip to use the default: `1234`)
+6. Use the parent dashboard to create child profiles
 5. Assign each profile an allowed library and maximum age rating
 6. Configure session limits, bedtime, theme, and font per profile
 
@@ -230,6 +232,7 @@ Global settings:
 ## Security Notes
 
 - All traffic goes directly from the browser to your Jellyfin server. No data is sent to any third party.
+- **Create a dedicated Jellyfin user for KidFin** with playback-only permissions. Avoid using your admin account -- if the token is exposed, the blast radius is limited to playback rather than full server administration.
 - Authentication tokens are stored in the browser's localStorage. This is standard for backend-less SPAs.
 - The parent PIN is a child deterrent, not a security boundary. It is stored client-side. A user with access to browser developer tools can read or modify it.
 - Video stream URLs include the API token as a query parameter. This is required because HTML5 video elements cannot use custom HTTP headers.
