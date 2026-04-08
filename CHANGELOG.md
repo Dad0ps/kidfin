@@ -2,7 +2,7 @@
 
 All notable changes to KidFin are documented here.
 
-## Version 1.1
+## Version 1.02
 
 ### Features
 - Collection (BoxSet) support -- tap a collection to browse and play its movies

@@ -22,6 +22,6 @@ export default defineConfig({
   ],
   define: {
     __BUILD_TIME__: JSON.stringify(buildTime),
-    __APP_VERSION__: JSON.stringify('1.1'),
+    __APP_VERSION__: JSON.stringify('1.02'),
   },
 })
